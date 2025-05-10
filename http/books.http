@@ -1,0 +1,138 @@
+### Variáveis (Exemplos)
+# @api_base_url = http://localhost:3000
+# @created_book_id =
+
+### =============================================
+### BOOK API TESTS (Usando NOMES para relações)
+### ANTES DE RODAR: Garanta que os NOMES de autor/categoria/editora usados abaixo já existem
+### ou que o @unique para name está nos seus schemas e você quer que sejam criados.
+### Para este exemplo, vamos supor que eles serão criados se não existirem.
+### =============================================
+
+### Limpar todos os Livros (CUIDADO!)
+DELETE http://localhost:3000/books
+
+### ---
+### Criar Autores, Categorias e Editora Iniciais (se ainda não existem)
+# Você pode fazer isso via os endpoints /authors, /categories, /publishers
+# Exemplo:
+POST http://localhost:3000/authors
+Content-Type: application/json
+{ "name": "J.K. Rowling", "biography": "Autora de Harry Potter." }
+
+### ---
+POST http://localhost:3000/categories
+Content-Type: application/json
+{ "name": "Fantasia Juvenil", "description": "Livros de fantasia para jovens." }
+
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+{ "name": "Rocco", "address": "Rio de Janeiro, Brasil" }
+
+### =============================================
+### CRIAR LIVROS USANDO NOMES
+### =============================================
+
+### Criar Livro 1: Harry Potter e a Pedra Filosofal
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "Harry Potter e a Pedra Filosofal",
+  "isbn": "978-8532511010",
+  "publicationYear": 1997,
+  "publisherName": "Rocco", 
+  "authorNames": ["J.K. Rowling"],
+  "categoryNames": ["Fantasia Juvenil"]
+}
+
+### ---
+### Criar Livro 2: Outro Livro (usando os mesmos ou novos nomes)
+# Crie primeiro "Frank Herbert" como autor e "Ficção Científica" como categoria
+POST http://localhost:3000/authors
+Content-Type: application/json
+{ "name": "Frank Herbert" }
+### ---
+POST http://localhost:3000/categories
+Content-Type: application/json
+{ "name": "Ficção Científica Clássica" }
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+{ "name": "Editora X" }
+### ---
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "Duna",
+  "isbn": "978-0441013593",
+  "publicationYear": 1965,
+  "publisherName": "Editora X",
+  "authorNames": ["Frank Herbert"],
+  "categoryNames": ["Ficção Científica Clássica"]
+}
+
+
+### =============================================
+### LER LIVROS
+### =============================================
+
+### Listar todos os Livros (deve ter 2 agora, com relações incluídas)
+GET http://localhost:3000/books
+Accept: application/json
+
+### ---
+### Buscar um livro pelo ID
+# COPIE O ID DO LIVRO "Duna" DA RESPOSTA DO POST ACIMA E COLE AQUI
+GET http://localhost:3000/books/COLOQUE_O_ID_DE_DUNA_AQUI
+Accept: application/json
+
+
+### =============================================
+### ATUALIZAR LIVRO USANDO NOMES
+### =============================================
+
+### Atualizar o livro "Duna"
+# COPIE O ID DO LIVRO "Duna" E COLE AQUI
+PUT http://localhost:3000/books/COLOQUE_O_ID_DE_DUNA_AQUI
+Content-Type: application/json
+
+{
+  "title": "Duna (Edição Especial)",
+  "publicationYear": 1966,
+  "publisherName": "Editora Y" ,  // Pode criar "Editora Y" ou conectar se já existir
+  "authorNames": ["Frank Herbert", "Brian Herbert"], // Pode criar "Brian Herbert" se não existir
+  "categoryNames": ["Ficção Científica Épica"] // Pode criar esta categoria se não existir
+}
+
+### ---
+# Adicionar um novo POST para "Brian Herbert" se quiser que ele seja criado com biografia
+# POST http://localhost:3000/authors
+# Content-Type: application/json
+# { "name": "Brian Herbert", "biography": "Filho de Frank Herbert." }
+### ---
+# Adicionar um novo POST para "Ficção Científica Épica"
+# POST http://localhost:3000/categories
+# Content-Type: application/json
+# { "name": "Ficção Científica Épica", "description": "FC em larga escala." }
+### ---
+# Adicionar um novo POST para "Editora Y"
+# POST http://localhost:3000/publishers
+# Content-Type: application/json
+# { "name": "Editora Y", "address": "Algum Lugar" }
+
+
+### =============================================
+### DELETAR E VERIFICAR
+### =============================================
+
+### Deletar o livro "Harry Potter..."
+# COPIE O ID DO LIVRO "Harry Potter..." E COLE AQUI
+DELETE http://localhost:3000/books/COLOQUE_O_ID_DO_HARRY_POTTER_AQUI
+
+### ---
+### Listar todos os livros (Harry Potter não deve estar mais)
+GET http://localhost:3000/books
+Accept: application/json

@@ -48,7 +48,7 @@ enum LibrarianRole {
 // Usuário da biblioteca (membro)
 model User {
   id               String        @id @default(uuid())
-  name             String
+  name             String        @unique
   email            String        @unique // Email deve ser único para usuários
   registrationDate DateTime      @default(now())
   
@@ -63,7 +63,7 @@ model User {
 // Autor do livro
 model Author {
   id        String   @id @default(uuid())
-  name      String
+  name      String   @unique
   biography String?
   
   books     Book[] // Relação muitos-para-muitos com Book

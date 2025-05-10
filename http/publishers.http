@@ -1,0 +1,85 @@
+### =============================================
+### PUBLISHER API TESTS
+### =============================================
+
+### Limpar todas as editoras (CUIDADO!)
+DELETE http://localhost:3000/publishers
+
+### ---
+### Listar todas as editoras (deve estar vazio)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+### ---
+### Criar Editora 1: "Intrínseca"
+POST http://localhost:3000/publishers
+Content-Type: application/json
+
+{
+  "name": "Intrínseca",
+  "address": "Rua das Palmeiras, 45, Rio de Janeiro, RJ",
+  "contactInfo": "contato@intrinseca.com.br"
+}
+
+### ---
+### Criar Editora 2: "Sextante"
+POST http://localhost:3000/publishers
+Content-Type: application/json
+
+{
+  "name": "Sextante",
+  "address": "Rua Voluntários da Pátria, 45, Botafogo, Rio de Janeiro, RJ"
+}
+
+### ---
+### Listar todas as editoras (deve ter 2 agora)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+### ---
+### Buscar uma editora pelo ID
+# COPIE O ID DA EDITORA "Intrínseca" DA RESPOSTA DO POST ACIMA E COLE AQUI
+GET http://localhost:3000/publishers/COLOQUE_O_ID_DA_INTRINSECA_AQUI
+Accept: application/json
+
+### ---
+### Atualizar a editora "Sextante" PELO ID
+# COPIE O ID DA EDITORA "Sextante" E COLE AQUI
+PUT http://localhost:3000/publishers/COLOQUE_O_ID_DA_SEXTANTE_AQUI
+Content-Type: application/json
+
+{
+  "name": "Editora Sextante Brasil",
+  "contactInfo": "faleconosco@esextante.com.br"
+}
+
+### ---
+### Atualizar a editora "Intrínseca" PELO NOME para "Intrínseca Livros"
+# Se o nome tiver espaços, lembre-se do URL encoding (o REST client faz automático)
+PUT http://localhost:3000/publishers/by-name/Intrínseca
+Content-Type: application/json
+
+{
+  "name": "Intrínseca Livros",
+  "address": "Novo Endereço, 123, Rio de Janeiro, RJ"
+}
+
+### ---
+### Verificar atualizações (listando todos)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+### ---
+### Deletar a editora "Editora Sextante Brasil" PELO NOME
+# Lembre-se do URL encoding se o nome tiver espaços: "Editora%20Sextante%20Brasil"
+DELETE http://localhost:3000/publishers/by-name/Editora Sextante Brasil
+
+### ---
+### Deletar a editora "Intrínseca Livros" (agora com nome atualizado) PELO ID
+# COPIE O ID DA "Intrínseca" (que agora é "Intrínseca Livros") E COLE AQUI
+DELETE http://localhost:3000/publishers/COLOQUE_O_ID_DA_INTRINSECA_AQUI
+
+### ---
+### Listar todas as editoras (deve estar vazio se deletou as duas)
+GET http://localhost:3000/publishers
+Accept: application/json

@@ -1,0 +1,115 @@
+### =============================================
+### CATEGORY API TESTS
+### =============================================
+
+### Limpar todas as categorias (para começar do zero, se quiser)
+DELETE http://localhost:3000/categories
+
+### ---
+### Listar todas as categorias (deve estar vazio)
+GET http://localhost:3000/categories
+Accept: application/json
+
+### ---
+### Criar Categoria 1: Ficção Científica
+POST http://localhost:3000/categories
+Content-Type: application/json
+
+{
+  "name": "Ficção Científica",
+  "description": "Livros sobre futuros imaginários, ciência e tecnologia avançada."
+}
+
+### ---
+### Criar Categoria 2: Romance Histórico
+POST http://localhost:3000/categories
+Content-Type: application/json
+
+{
+  "name": "Romance Histórico"
+}
+
+### ---
+### Listar todas as categorias (deve ter 2 agora)
+GET http://localhost:3000/categories
+Accept: application/json
+
+### ---
+### Listar categorias filtrando por nome "Ficção"
+GET http://localhost:3000/categories?name=Ficção
+Accept: application/json
+
+### ---
+### Buscar uma categoria pelo ID
+# COPIE O ID DA CATEGORIA "Ficção Científica" DA RESPOSTA DO POST ACIMA E COLE AQUI
+GET http://localhost:3000/categories/c6186488-ad07-4d01-acfc-2b5f137f5857
+Accept: application/json
+
+### ---
+### Atualizar a categoria "Romance Histórico"
+# COPIE O ID DA CATEGORIA "Romance Histórico" E COLE AQUI
+PUT http://localhost:3000/categories/ea81d063-7076-44f6-9e4b-c36d582301df
+Content-Type: application/json
+
+{
+  "name": "Romance Histórico Medieval",
+  "description": "Romances ambientados na Idade Média."
+}
+
+### ---
+### Deletar a categoria "Romance Histórico Medieval" (já atualizada)
+# COPIE O ID DA CATEGORIA "Romance Histórico Medieval" E COLE AQUI
+DELETE http://localhost:3000/categories/ea81d063-7076-44f6-9e4b-c36d582301df
+
+### ---
+### Listar todas as categorias (só deve ter "Ficção Científica" agora)
+GET http://localhost:3000/categories
+Accept: application/json
+
+### =============================================
+### CATEGORY API TESTS - OPERAÇÕES POR NOME
+### (Assumindo que 'name' é @unique no schema.prisma para Category)
+### =============================================
+
+### ---
+### Criar uma categoria para teste (Ex: "Fantasia")
+POST http://localhost:3000/categories
+Content-Type: application/json
+
+{
+  "name": "Fantasia",
+  "description": "Livros com elementos mágicos e mundos imaginários."
+}
+
+### ---
+### Atualizar a categoria "Fantasia" PELO NOME para "Fantasia Épica"
+# OBS: Se o nome "Fantasia" tiver espaços ou caracteres especiais, ele precisa estar URL-Encoded na linha abaixo.
+# Ex: "Fantasia Medieval" viraria "Fantasia%20Medieval"
+PUT http://localhost:3000/categories/by-name/Fantasia
+Content-Type: application/json
+
+{
+  "name": "Fantasia Épica",
+  "description": "Subgênero da fantasia caracterizado pelo seu escopo e temas grandiosos."
+}
+
+### ---
+### Verificar a atualização (buscando todos, ou pelo nome "Fantasia Épica")
+GET http://localhost:3000/categories?name=Fantasia%20Épica
+Accept: application/json
+
+### ---
+### Deletar a categoria "Fantasia Épica" PELO NOME
+# OBS: URL-Encode o nome se necessário
+DELETE http://localhost:3000/categories/by-name/Fantasia%20Épica
+
+### ---
+### Verificar se "Fantasia Épica" foi deletada (buscando pelo nome)
+GET http://localhost:3000/categories?name=Fantasia%20Épica
+Accept: application/json
+# Resultado esperado: [] (array vazio)
+
+### ---
+### Listar todas as categorias (para ver o estado final)
+GET http://localhost:3000/categories
+Accept: application/json

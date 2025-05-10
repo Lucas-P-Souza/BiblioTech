@@ -1,0 +1,111 @@
+### =============================================
+### LIMPAR TUDO (para começar do zero, se quiser)
+### CUIDADO: ISTO APAGA TODOS OS AUTORES!
+### =============================================
+DELETE http://localhost:3000/authors
+
+### Separador
+### ---
+
+### (Author) Listar todos os autores (deve estar vazio após o DELETE ALL)
+GET http://localhost:3000/authors
+Accept: application/json
+
+### =============================================
+### CRIAR AUTORES
+### =============================================
+
+### (Author) Criar Autor 1: Machado de Assis
+# Copie o ID da resposta e cole na variável @author_id_machado ou use diretamente abaixo
+POST http://localhost:3000/authors
+Content-Type: application/json
+
+{
+  "name": "Machado de Assis",
+  "biography": "Escritor brasileiro, considerado o maior nome da literatura nacional."
+}
+
+### Separador
+### ---
+
+### (Author) Criar Autor 2: Clarice Lispector
+# Copie o ID da resposta e cole na variável @author_id_clarice ou use diretamente abaixo
+POST http://localhost:3000/authors
+Content-Type: application/json
+
+{
+  "name": "Clarice Lispector",
+  "biography": "Escritora e jornalista nascida na Ucrânia e naturalizada brasileira."
+}
+
+### =============================================
+### LER AUTORES
+### =============================================
+
+### (Author) Listar todos os autores (agora deve ter Machado e Clarice)
+GET http://localhost:3000/authors
+Accept: application/json
+
+### ---
+
+### (Author) Listar autores filtrando por nome "Clarice"
+GET http://localhost:3000/authors?name=Clarice
+Accept: application/json
+
+### ---
+
+### (Author) Buscar Machado de Assis pelo ID
+# Substitua pelo ID real do Machado de Assis que você copiou
+GET http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
+Accept: application/json
+
+
+### =============================================
+### ATUALIZAR AUTOR
+### =============================================
+
+### (Author) Atualizar Clarice Lispector
+# Substitua pelo ID real da Clarice Lispector que você copiou
+PUT http://localhost:3000/authors/500cab71-12fe-4f9e-918e-0fae5ec1e024
+Content-Type: application/json
+
+{
+  "name": "Clarice Lispector (Rainha)",
+  "biography": "Uma das mais importantes escritoras do século XX. Gênia."
+}
+
+### ---
+### (Author) Verificar a atualização da Clarice (buscando pelo ID dela)
+GET http://localhost:3000/authors/500cab71-12fe-4f9e-918e-0fae5ec1e024
+Accept: application/json
+
+
+### =============================================
+### DELETAR AUTOR INDIVIDUAL
+### =============================================
+
+### (Author) Deletar Machado de Assis
+# Substitua pelo ID real do Machado de Assis
+DELETE http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
+
+### ---
+### (Author) Tentar buscar Machado de Assis (deve dar 404 Not Found)
+GET http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
+Accept: application/json
+
+### ---
+### (Author) Listar todos os autores (Machado não deve estar mais, só Clarice atualizada)
+GET http://localhost:3000/authors
+Accept: application/json
+
+
+### =============================================
+### DELETAR TODOS OS AUTORES NOVAMENTE (para limpar no final do teste)
+### CUIDADO: ISTO APAGA TODOS OS AUTORES!
+### =============================================
+DELETE http://localhost:3000/authors
+
+### ---
+### (Author) Listar todos os autores (deve estar vazio de novo)
+GET http://localhost:3000/authors
+Accept: application/json

@@ -1,0 +1,136 @@
+### ======================================================================
+### PREPARAÇÃO: Criar Autores, Categorias, Editoras (se não existirem)
+### O controller do Livro vai tentar usar connectOrCreate, mas é bom garantir.
+### ======================================================================
+
+POST http://localhost:3000/authors
+Content-Type: application/json
+{ "name": "George R. R. Martin" }
+
+### ---
+POST http://localhost:3000/categories
+Content-Type: application/json
+{ "name": "Fantasia Medieval Sombria" }
+
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+{ "name": "Bantam Spectra" }
+
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+{ "name": "Voyager Books" } # Outra editora para teste de update
+
+
+### ======================================================================
+### BOOK API TESTS - FOCO EM ISBN E NOMES PARA RELAÇÕES
+### ======================================================================
+
+### Limpar todos os Livros (para começar os testes do zero)
+DELETE http://localhost:3000/books
+
+### ---
+### Criar Livro 1: "A Guerra dos Tronos"
+# Usando nomes para autores, categorias e editora
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "A Guerra dos Tronos",
+  "isbn": "978-0553593716",
+  "publicationYear": 1996,
+  "publisherName": "Bantam Spectra", 
+  "authorNames": ["George R. R. Martin"],
+  "categoryNames": ["Fantasia Medieval Sombria"]
+}
+
+### ---
+### Criar Livro 2: "O Festim dos Corvos" (com mesmo autor e categoria)
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "O Festim dos Corvos",
+  "isbn": "978-0553582024",
+  "publicationYear": 2005,
+  "publisherName": "Bantam Spectra", 
+  "authorNames": ["George R. R. Martin"],
+  "categoryNames": ["Fantasia Medieval Sombria"]
+}
+
+### =============================================
+### LER LIVROS
+### =============================================
+
+### Listar todos os Livros (deve ter 2)
+GET http://localhost:3000/books
+Accept: application/json
+
+### ---
+### Buscar "A Guerra dos Tronos" PELO ISBN
+GET http://localhost:3000/books/isbn/978-0553593716
+Accept: application/json
+
+### ---
+### Buscar livro com ISBN inexistente (deve dar 404)
+GET http://localhost:3000/books/isbn/000-0000000000
+Accept: application/json
+
+
+### =============================================
+### ATUALIZAR LIVRO PELO ISBN
+### =============================================
+
+### Atualizar "A Guerra dos Tronos" (pelo ISBN 978-0553593716)
+# Mudando o título e a editora (usando o nome da nova editora)
+PUT http://localhost:3000/books/isbn/978-0553593716
+Content-Type: application/json
+
+{
+  "title": "A Guerra dos Tronos - Edição Ilustrada",
+  "publicationYear": 1997,
+  "publisherName": "Voyager Books" 
+}
+
+### ---
+### Verificar a atualização (buscando pelo ISBN original)
+GET http://localhost:3000/books/isbn/978-0553593716
+Accept: application/json
+# Deve mostrar o título e editora atualizados.
+
+
+### =============================================
+### DELETAR LIVRO PELO ISBN
+### =============================================
+
+### Deletar "O Festim dos Corvos" (pelo ISBN 978-0553582024)
+DELETE http://localhost:3000/books/isbn/978-0553582024
+
+### ---
+### Tentar buscar "O Festim dos Corvos" pelo ISBN (deve dar 404)
+GET http://localhost:3000/books/isbn/978-0553582024
+Accept: application/json
+
+### ---
+### Listar todos os livros (só deve ter "A Guerra dos Tronos - Edição Ilustrada")
+GET http://localhost:3000/books
+Accept: application/json
+
+### =============================================
+### TESTAR OPERAÇÕES POR ID (OPCIONAL - se você quiser usar ID em algum momento)
+### Para isso, você precisaria pegar o ID de um livro criado (ex: da resposta do GET /books acima)
+### =============================================
+# Exemplo:
+# @id_guerra_tronos = COPIE_O_ID_AQUI_DO_GET_ACIMA
+
+### Buscar "A Guerra dos Tronos - Edição Ilustrada" pelo ID
+# GET http://localhost:3000/books/id/{{id_guerra_tronos}}
+# Accept: application/json
+
+### Deletar "A Guerra dos Tronos - Edição Ilustrada" PELO ID
+# DELETE http://localhost:3000/books/id/{{id_guerra_tronos}}
+
+### Listar todos os livros (deve estar vazio de novo)
+# GET http://localhost:3000/books
+# Accept: application/json
