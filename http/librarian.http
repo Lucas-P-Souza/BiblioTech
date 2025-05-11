@@ -1,0 +1,87 @@
+### ======================================================================
+### LIBRARIAN API TESTS - Foco em EmployeeID e CRUD completo
+### ======================================================================
+
+### PASSO 0: Limpar todos os Bibliotecários (CUIDADO!)
+DELETE http://localhost:3000/librarians
+
+### ---
+### PASSO 1: Listar todos os Bibliotecários (deve estar vazio)
+GET http://localhost:3000/librarians
+Accept: application/json
+
+### ======================================================================
+### PASSO 2: CRIAR BIBLIOTECÁRIOS com EmployeeIDs conhecidos
+### ======================================================================
+
+### Criar Bibliotecário 1: "Ana Supervisora" com EmployeeID {{employee_id_ana}}
+POST http://localhost:3000/librarians
+Content-Type: application/json
+
+{
+  "name": "Ana Supervisora",
+  "email": "admin@bibliotech.com",
+  "employeeId": "SUP001", 
+  "password": "superSenhaAna123",
+  "role": "Manager"
+}
+
+### ---
+### Criar Bibliotecário 2: "Bruno Atendente" com EmployeeID {{employee_id_bruno}}
+POST http://localhost:3000/librarians
+Content-Type: application/json
+
+{
+  "name": "Bruno Atendente",
+  "email": "bruno.atende@bibliotech.com",
+  "employeeId": "ATD007",
+  "password": "atendenteSeguro789",
+  "role": "Staff" 
+}
+
+
+### ======================================================================
+### PASSO 3: LISTAR TODOS OS BIBLIOTECÁRIOS
+### ======================================================================
+
+GET http://localhost:3000/librarians
+Accept: application/json
+# Esperado: Lista com Ana e Bruno, sem passwordHash
+
+
+### ======================================================================
+### PASSO 4: OPERAÇÕES POR EMPLOYEE_ID
+### ======================================================================
+
+### Buscar "Ana Supervisora" PELO EMPLOYEE_ID {{employee_id_ana}}
+GET http://localhost:3000/librarians/employee/SUP001
+Accept: application/json
+
+### ---
+### Atualizar "Bruno Atendente" (employeeId {{employee_id_bruno}}) PELO EMPLOYEE_ID
+PUT http://localhost:3000/librarians/employee/ATD007
+Content-Type: application/json
+
+{
+  "email": "bruno.promovido@bibliotech.com",
+  "role": "Admin"
+}
+
+### ---
+### Verificar a atualização do Bruno (buscando pelo employeeId {{employee_id_bruno}})
+GET http://localhost:3000/librarians/employee/ATD007
+Accept: application/json
+
+### ---
+### Deletar "Ana Supervisora" (employeeId {{employee_id_ana}}) PELO EMPLOYEE_ID
+DELETE http://localhost:3000/librarians/employee/SUP001
+
+### ---
+### Tentar buscar "Ana Supervisora" pelo employeeId {{employee_id_ana}} (deve dar 404)
+GET http://localhost:3000/librarians/employee/SUP001
+Accept: application/json
+
+### ---
+### Listar todos os Bibliotecários (só deve ter "Bruno Atendente" atualizado agora)
+GET http://localhost:3000/librarians
+Accept: application/json

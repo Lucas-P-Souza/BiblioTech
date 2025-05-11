@@ -3,7 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import authorRouter from './routes/author.routes';
 import categoryRouter from './routes/category.routes';
 import publisherRouter from './routes/publisher.routes';
-import bookRouter from './routes/book.routes'; // <--- ADICIONE ESTA LINHA
+import bookRouter from './routes/book.routes';
+import librarianRouter from './routes/librarian.routes'; // <--- ADICIONE ESTA LINHA
 
 const app = express();
 const prisma = new PrismaClient();
@@ -19,7 +20,8 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/authors', authorRouter);
 app.use('/categories', categoryRouter);
 app.use('/publishers', publisherRouter);
-app.use('/books', bookRouter); // <--- ADICIONE ESTA LINHA
+app.use('/books', bookRouter);
+app.use('/librarians', librarianRouter);
 
 // TODO: Adicionar os routers para as outras entidades aqui
 

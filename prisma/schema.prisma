@@ -194,7 +194,7 @@ model Reservation {
 // Bibliotecário/Funcionário
 model Librarian {
   id           String        @id @default(uuid())
-  name         String
+  name         String        @unique
   email        String        @unique // Email deve ser único para login
   employeeId   String        @unique // ID funcional deve ser único
   role         LibrarianRole @default(Staff)
