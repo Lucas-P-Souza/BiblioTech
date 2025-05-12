@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
-// Tentando importar LibrarianRole diretamente, assumindo Prisma generate OK
 import { PrismaClient, LibrarianRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+// A interface AuthenticatedRequest virá do seu auth.middleware.ts
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+
 
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
 // --- CRIAR um novo bibliotecário ---
-export const createLibrarian = async (req: Request, res: Response): Promise<void> => {
+export const createLibrarian = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const { name, email, employeeId, password, role } = req.body;
 
@@ -20,28 +22,40 @@ export const createLibrarian = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        let validRole: LibrarianRole = LibrarianRole.Staff; // Default
-        if (role) {
-            if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
-                validRole = role as LibrarianRole;
-            } else {
-                res.status(400).json({ message: `Role inválido. Valores permitidos: ${Object.values(LibrarianRole).join(', ')}` });
-                return;
+        const anyLibrarianExists = await prisma.librarian.findFirst();
+        let finalRole: LibrarianRole;
+
+        if (!anyLibrarianExists) {
+            finalRole = LibrarianRole.Admin;
+            console.log('Primeiro bibliotecário sendo criado. Definindo role como Admin.');
+        } else {
+            // Se já existem bibliotecários, a rota DEVE ser protegida para que apenas um Admin crie outros.
+            // A verificação de req.librarian.role === LibrarianRole.Admin é feita pelo middleware authorizeRoles na rota.
+            // Aqui, apenas validamos o 'role' fornecido para o novo bibliotecário.
+            let requestedRole: LibrarianRole = LibrarianRole.Staff; // Default se não especificado
+            if (role) {
+                if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
+                    requestedRole = role as LibrarianRole;
+                } else {
+                    res.status(400).json({ message: `Role inválido. Valores permitidos: ${Object.values(LibrarianRole).join(', ')}` });
+                    return;
+                }
             }
+            finalRole = requestedRole;
         }
 
         const salt = await bcrypt.genSalt(SALT_ROUNDS);
         const passwordHash = await bcrypt.hash(password, salt);
 
         const newLibrarian = await prisma.librarian.create({
-            data: { name, email, employeeId, passwordHash, role: validRole },
+            data: { name, email, employeeId, passwordHash, role: finalRole },
             select: { id: true, name: true, email: true, employeeId: true, role: true, createdAt: true, updatedAt: true }
         });
         res.status(201).json(newLibrarian);
     } catch (error: unknown) {
-        console.error("Erro ao criar bibliotecário:", error);
+        console.error("Controller Error - createLibrarian:", error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2002') {
-            res.status(409).json({ message: 'Email ou ID de funcionário já cadastrado.' });
+            res.status(409).json({ message: 'Conflito: Email ou ID de funcionário já cadastrado.' });
             return;
         }
         res.status(500).json({ message: 'Erro interno ao criar bibliotecário.' });
@@ -56,7 +70,7 @@ export const getAllLibrarians = async (req: Request, res: Response): Promise<voi
         });
         res.status(200).json(librarians);
     } catch (error: unknown) {
-        console.error("Erro ao listar bibliotecários:", error);
+        console.error("Controller Error - getAllLibrarians:", error);
         res.status(500).json({ message: 'Erro interno ao buscar bibliotecários.' });
     }
 };
@@ -70,12 +84,12 @@ export const getLibrarianById = async (req: Request, res: Response): Promise<voi
             select: { id: true, name: true, email: true, employeeId: true, role: true, createdAt: true, updatedAt: true }
         });
         if (!librarian) {
-            res.status(404).json({ message: 'Bibliotecário não encontrado (por ID).' });
+            res.status(404).json({ message: 'Bibliotecário não encontrado (ID).' });
             return;
         }
         res.status(200).json(librarian);
     } catch (error: unknown) {
-        console.error(`Erro ao buscar bibliotecário com ID ${id}:`, error);
+        console.error(`Controller Error - getLibrarianById (ID: ${id}):`, error);
         res.status(500).json({ message: 'Erro interno.' });
     }
 };
@@ -89,23 +103,24 @@ export const getLibrarianByEmployeeId = async (req: Request, res: Response): Pro
             select: { id: true, name: true, email: true, employeeId: true, role: true, createdAt: true, updatedAt: true }
         });
         if (!librarian) {
-            res.status(404).json({ message: 'Bibliotecário não encontrado (por Employee ID).' });
+            res.status(404).json({ message: 'Bibliotecário não encontrado (Employee ID).' });
             return;
         }
         res.status(200).json(librarian);
     } catch (error: unknown) {
-        console.error(`Erro ao buscar bibliotecário com Employee ID ${employeeId}:`, error);
+        console.error(`Controller Error - getLibrarianByEmployeeId (EmployeeID: ${employeeId}):`, error);
         res.status(500).json({ message: 'Erro interno.' });
     }
 };
 
 // --- ATUALIZAR um bibliotecário pelo ID (UUID) ---
-export const updateLibrarianById = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const { name, email, employeeId, password, role } = req.body;
+// Assumindo que a rota que chama esta função é protegida por authorizeRoles(LibrarianRole.Admin)
+export const updateLibrarianById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { id: targetLibrarianId } = req.params;
+    const { name, email, employeeId, password, role } = req.body; // 'role' é o novo role a ser definido
 
     if (name === undefined && email === undefined && employeeId === undefined && password === undefined && role === undefined) {
-        res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
+        res.status(400).json({ message: 'Nenhum dado novo para atualizar.' });
         return;
     }
 
@@ -114,38 +129,44 @@ export const updateLibrarianById = async (req: Request, res: Response): Promise<
         if (name !== undefined) dataToUpdate.name = name;
         if (email !== undefined) dataToUpdate.email = email;
         if (employeeId !== undefined) dataToUpdate.employeeId = employeeId;
+
+        // Se um novo 'role' foi fornecido no corpo da requisição
         if (role !== undefined) {
             if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
                 dataToUpdate.role = role as LibrarianRole;
-            } else if (role) {
-                res.status(400).json({ message: `Role inválido. Permitidos: ${Object.values(LibrarianRole).join(', ')}` }); return;
+            } else {
+                // Se 'role' foi fornecido mas não é um valor válido do enum
+                res.status(400).json({ message: `Role inválido. Valores permitidos: ${Object.values(LibrarianRole).join(', ')}` });
+                return;
             }
         }
+
         if (password) {
-            if (password.length < 6) { res.status(400).json({ message: 'Nova senha curta demais.' }); return; }
+            if (password.length < 6) { res.status(400).json({ message: 'Nova senha curta demais (mínimo 6 caracteres).' }); return; }
             const salt = await bcrypt.genSalt(SALT_ROUNDS);
             dataToUpdate.passwordHash = await bcrypt.hash(password, salt);
         }
 
         const updatedLibrarian = await prisma.librarian.update({
-            where: { id }, data: dataToUpdate,
+            where: { id: targetLibrarianId }, data: dataToUpdate,
             select: { id: true, name: true, email: true, employeeId: true, role: true, createdAt: true, updatedAt: true }
         });
         res.status(200).json(updatedLibrarian);
     } catch (error: unknown) {
-        console.error(`Erro ao atualizar bibliotecário ID ${id}:`, error);
+        console.error(`Controller Error - updateLibrarianById (ID: ${targetLibrarianId}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
             if (error.code === 'P2025') { res.status(404).json({ message: 'Bibliotecário não encontrado (ID).' }); return; }
-            if (error.code === 'P2002') { res.status(409).json({ message: 'Email ou Employee ID já em uso.' }); return; }
+            if (error.code === 'P2002') { res.status(409).json({ message: 'Conflito: Novo email ou Employee ID já está em uso.' }); return; }
         }
         res.status(500).json({ message: 'Erro interno ao atualizar.' });
     }
 };
 
 // --- ATUALIZAR um bibliotecário pelo EMPLOYEE_ID ---
-export const updateLibrarianByEmployeeId = async (req: Request, res: Response): Promise<void> => {
-    const { employeeId: employeeIdParam } = req.params;
-    const { name, email, employeeId: newEmployeeId, password, role } = req.body;
+// Assumindo que a rota que chama esta função é protegida por authorizeRoles(LibrarianRole.Admin)
+export const updateLibrarianByEmployeeId = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { employeeId: paramEmployeeId } = req.params;
+    const { name, email, employeeId: newEmployeeId, password, role } = req.body; // 'role' é o novo role
 
     if (name === undefined && email === undefined && newEmployeeId === undefined && password === undefined && role === undefined) {
         res.status(400).json({ message: 'Nenhum dado para atualização.' }); return;
@@ -156,13 +177,16 @@ export const updateLibrarianByEmployeeId = async (req: Request, res: Response): 
         if (name !== undefined) dataToUpdate.name = name;
         if (email !== undefined) dataToUpdate.email = email;
         if (newEmployeeId !== undefined) dataToUpdate.employeeId = newEmployeeId;
+
         if (role !== undefined) {
             if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
                 dataToUpdate.role = role as LibrarianRole;
-            } else if (role) {
-                res.status(400).json({ message: `Role inválido. Permitidos: ${Object.values(LibrarianRole).join(', ')}` }); return;
+            } else {
+                res.status(400).json({ message: `Role inválido. Valores permitidos: ${Object.values(LibrarianRole).join(', ')}` });
+                return;
             }
         }
+
         if (password) {
             if (password.length < 6) { res.status(400).json({ message: 'Nova senha curta demais.' }); return; }
             const salt = await bcrypt.genSalt(SALT_ROUNDS);
@@ -170,15 +194,15 @@ export const updateLibrarianByEmployeeId = async (req: Request, res: Response): 
         }
 
         const updatedLibrarian = await prisma.librarian.update({
-            where: { employeeId: employeeIdParam }, data: dataToUpdate,
+            where: { employeeId: paramEmployeeId }, data: dataToUpdate,
             select: { id: true, name: true, email: true, employeeId: true, role: true, createdAt: true, updatedAt: true }
         });
         res.status(200).json(updatedLibrarian);
     } catch (error: unknown) {
-        console.error(`Erro ao atualizar bibliotecário Employee ID ${employeeIdParam}:`, error);
+        console.error(`Controller Error - updateLibrarianByEmployeeId (EmployeeID: ${paramEmployeeId}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
             if (error.code === 'P2025') { res.status(404).json({ message: 'Bibliotecário não encontrado (Employee ID).' }); return; }
-            if (error.code === 'P2002') { res.status(409).json({ message: 'Novo email ou Employee ID já em uso.' }); return; }
+            if (error.code === 'P2002') { res.status(409).json({ message: 'Conflito: Novo email ou Employee ID já está em uso.' }); return; }
         }
         res.status(500).json({ message: 'Erro interno ao atualizar.' });
     }
@@ -191,7 +215,7 @@ export const deleteLibrarianById = async (req: Request, res: Response): Promise<
         await prisma.librarian.delete({ where: { id } });
         res.status(204).send();
     } catch (error: unknown) {
-        console.error(`Erro ao deletar bibliotecário ID ${id}:`, error);
+        console.error(`Controller Error - deleteLibrarianById (ID: ${id}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2025') {
             res.status(404).json({ message: 'Bibliotecário não encontrado (ID).' }); return;
         }
@@ -211,7 +235,7 @@ export const deleteLibrarianByEmployeeId = async (req: Request, res: Response): 
         await prisma.librarian.delete({ where: { employeeId } });
         res.status(204).send();
     } catch (error: unknown) {
-        console.error(`Erro ao deletar bibliotecário Employee ID ${employeeId}:`, error);
+        console.error(`Controller Error - deleteLibrarianByEmployeeId (EmployeeID: ${employeeId}):`, error);
         res.status(500).json({ message: 'Erro interno.' });
     }
 };
@@ -222,7 +246,7 @@ export const deleteAllLibrarians = async (req: Request, res: Response): Promise<
         const deleteResult = await prisma.librarian.deleteMany({});
         res.status(200).json({ message: 'Todos bibliotecários deletados.', count: deleteResult.count });
     } catch (error: unknown) {
-        console.error("Erro ao deletar todos os bibliotecários:", error);
+        console.error("Controller Error - deleteAllLibrarians:", error);
         res.status(500).json({ message: 'Erro interno.' });
     }
 };

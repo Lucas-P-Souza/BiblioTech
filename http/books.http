@@ -1,138 +1,152 @@
 ### Variáveis (Exemplos)
-# @api_base_url = http://localhost:3000
-# @created_book_id =
+# @admin_token = SEU_TOKEN_DE_ADMIN_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_AQUI
+# @book_id_criado =
+# @book_title_teste1 = "O Hobbit" 
+# @book_isbn_teste1 = "978-0547928227"
+# @book_title_teste2 = "O Silmarillion"
+# @book_isbn_teste2 = "978-0618391110"
 
-### =============================================
-### BOOK API TESTS (Usando NOMES para relações)
-### ANTES DE RODAR: Garanta que os NOMES de autor/categoria/editora usados abaixo já existem
-### ou que o @unique para name está nos seus schemas e você quer que sejam criados.
-### Para este exemplo, vamos supor que eles serão criados se não existirem.
-### =============================================
+### ======================================================================
+### PREPARAÇÃO: Criar Autores, Categorias, Editoras (se não existirem)
+### ======================================================================
+POST http://localhost:3000/authors
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
-### Limpar todos os Livros (CUIDADO!)
+{ "name": "J.R.R. Tolkien" }
+### ---
+POST http://localhost:3000/categories
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "Alta Fantasia" }
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "HarperCollins" }
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "Editora Martins Fontes" }
+
+
+### ======================================================================
+### BOOK API TESTS - FOCO EM ID/ISBN PARA MODIFICAÇÃO/DELEÇÃO
+### ======================================================================
+
+### Limpar todos os Livros (REQUER TOKEN ADMIN)
 DELETE http://localhost:3000/books
+Authorization: Bearer {{admin_token}}
 
 ### ---
-### Criar Autores, Categorias e Editora Iniciais (se ainda não existem)
-# Você pode fazer isso via os endpoints /authors, /categories, /publishers
-# Exemplo:
-POST http://localhost:3000/authors
-Content-Type: application/json
-{ "name": "J.K. Rowling", "biography": "Autora de Harry Potter." }
-
-### ---
-POST http://localhost:3000/categories
-Content-Type: application/json
-{ "name": "Fantasia Juvenil", "description": "Livros de fantasia para jovens." }
-
-### ---
-POST http://localhost:3000/publishers
-Content-Type: application/json
-{ "name": "Rocco", "address": "Rio de Janeiro, Brasil" }
-
-### =============================================
-### CRIAR LIVROS USANDO NOMES
-### =============================================
-
-### Criar Livro 1: Harry Potter e a Pedra Filosofal
+### Criar Livro 1: "{{@book_title_teste1}}" (REQUER TOKEN)
 POST http://localhost:3000/books
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "title": "Harry Potter e a Pedra Filosofal",
-  "isbn": "978-8532511010",
-  "publicationYear": 1997,
-  "publisherName": "Rocco", 
-  "authorNames": ["J.K. Rowling"],
-  "categoryNames": ["Fantasia Juvenil"]
+  "title": "{{@book_title_teste1}}",
+  "isbn": "{{@book_isbn_teste1}}",
+  "publicationYear": 1937,
+  "publisherName": "HarperCollins", 
+  "authorNames": ["J.R.R. Tolkien"],
+  "categoryNames": ["Alta Fantasia"]
 }
+### Anote o ID do livro "{{@book_title_teste1}}" da resposta para testes por ID!
 
 ### ---
-### Criar Livro 2: Outro Livro (usando os mesmos ou novos nomes)
-# Crie primeiro "Frank Herbert" como autor e "Ficção Científica" como categoria
-POST http://localhost:3000/authors
-Content-Type: application/json
-{ "name": "Frank Herbert" }
-### ---
-POST http://localhost:3000/categories
-Content-Type: application/json
-{ "name": "Ficção Científica Clássica" }
-### ---
-POST http://localhost:3000/publishers
-Content-Type: application/json
-{ "name": "Editora X" }
-### ---
+### Criar Livro 2: "{{@book_title_teste2}}" (REQUER TOKEN)
 POST http://localhost:3000/books
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "title": "Duna",
-  "isbn": "978-0441013593",
-  "publicationYear": 1965,
-  "publisherName": "Editora X",
-  "authorNames": ["Frank Herbert"],
-  "categoryNames": ["Ficção Científica Clássica"]
+  "title": "{{@book_title_teste2}}",
+  "isbn": "{{@book_isbn_teste2}}",
+  "publicationYear": 1977,
+  "publisherName": "HarperCollins", 
+  "authorNames": ["J.R.R. Tolkien"],
+  "categoryNames": ["Alta Fantasia"]
 }
 
-
 ### =============================================
-### LER LIVROS
+### LER LIVROS (PÚBLICO)
 ### =============================================
 
-### Listar todos os Livros (deve ter 2 agora, com relações incluídas)
+### Listar todos os Livros (deve ter 2)
 GET http://localhost:3000/books
 Accept: application/json
 
 ### ---
-### Buscar um livro pelo ID
-# COPIE O ID DO LIVRO "Duna" DA RESPOSTA DO POST ACIMA E COLE AQUI
-GET http://localhost:3000/books/COLOQUE_O_ID_DE_DUNA_AQUI
+### Buscar livros PELO TÍTULO EXATO "{{@book_title_teste1}}" (retorna array)
+GET http://localhost:3000/books/title/{{@book_title_teste1}}
+Accept: application/json
+
+### ---
+### Buscar "{{@book_title_teste1}}" PELO ISBN (retorna objeto único)
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
 Accept: application/json
 
 
 ### =============================================
-### ATUALIZAR LIVRO USANDO NOMES
+### ATUALIZAR LIVRO (PRIVADO - POR ID OU ISBN)
 ### =============================================
 
-### Atualizar o livro "Duna"
-# COPIE O ID DO LIVRO "Duna" E COLE AQUI
-PUT http://localhost:3000/books/COLOQUE_O_ID_DE_DUNA_AQUI
+### Atualizar "{{@book_title_teste1}}" PELO ISBN ({{@book_isbn_teste1}})
+# Mudando o título e a editora
+PUT http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "title": "Duna (Edição Especial)",
-  "publicationYear": 1966,
-  "publisherName": "Editora Y" ,  // Pode criar "Editora Y" ou conectar se já existir
-  "authorNames": ["Frank Herbert", "Brian Herbert"], // Pode criar "Brian Herbert" se não existir
-  "categoryNames": ["Ficção Científica Épica"] // Pode criar esta categoria se não existir
+  "title": "O Hobbit (Edição de Luxo)",
+  "publisherName": "Editora Martins Fontes" 
 }
 
 ### ---
-# Adicionar um novo POST para "Brian Herbert" se quiser que ele seja criado com biografia
-# POST http://localhost:3000/authors
-# Content-Type: application/json
-# { "name": "Brian Herbert", "biography": "Filho de Frank Herbert." }
+### Verificar a atualização (buscando pelo ISBN {{@book_isbn_teste1}})
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Accept: application/json
+# Deve mostrar o título e editora atualizados.
+
 ### ---
-# Adicionar um novo POST para "Ficção Científica Épica"
-# POST http://localhost:3000/categories
-# Content-Type: application/json
-# { "name": "Ficção Científica Épica", "description": "FC em larga escala." }
-### ---
-# Adicionar um novo POST para "Editora Y"
-# POST http://localhost:3000/publishers
-# Content-Type: application/json
-# { "name": "Editora Y", "address": "Algum Lugar" }
+### Atualizar "{{@book_title_teste2}}" PELO ID
+# COPIE O ID DO LIVRO "{{@book_title_teste2}}" (do GET /books ou da criação) E COLE AQUI
+PUT http://localhost:3000/books/id/COLOQUE_O_ID_DO_SILMARILLION_AQUI
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "publicationYear": 1978
+}
 
 
 ### =============================================
-### DELETAR E VERIFICAR
+### DELETAR LIVRO (PRIVADO - POR ID OU ISBN)
 ### =============================================
 
-### Deletar o livro "Harry Potter..."
-# COPIE O ID DO LIVRO "Harry Potter..." E COLE AQUI
-DELETE http://localhost:3000/books/COLOQUE_O_ID_DO_HARRY_POTTER_AQUI
+### Deletar "O Hobbit (Edição de Luxo)" (pelo ISBN {{@book_isbn_teste1}})
+DELETE http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Authorization: Bearer {{staff_token}}
 
 ### ---
-### Listar todos os livros (Harry Potter não deve estar mais)
+### Tentar buscar "O Hobbit (Edição de Luxo)" pelo ISBN (deve dar 404)
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Accept: application/json
+
+### ---
+### Deletar "{{@book_title_teste2}}" (agora com ano atualizado) PELO ID
+# COPIE O ID DO LIVRO "{{@book_title_teste2}}" E COLE AQUI
+DELETE http://localhost:3000/books/id/COLOQUE_O_ID_DO_SILMARILLION_AQUI
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Listar todos os livros (deve estar vazio se deletou os dois)
 GET http://localhost:3000/books
 Accept: application/json
+

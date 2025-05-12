@@ -4,7 +4,8 @@ import authorRouter from './routes/author.routes';
 import categoryRouter from './routes/category.routes';
 import publisherRouter from './routes/publisher.routes';
 import bookRouter from './routes/book.routes';
-import librarianRouter from './routes/librarian.routes'; // <--- ADICIONE ESTA LINHA
+import librarianRouter from './routes/librarian.routes';
+import authRouter from './routes/auth.routes';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -17,13 +18,13 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // ---- Nossas Rotas da API ----
+app.use('/auth', authRouter);
 app.use('/authors', authorRouter);
 app.use('/categories', categoryRouter);
 app.use('/publishers', publisherRouter);
 app.use('/books', bookRouter);
 app.use('/librarians', librarianRouter);
-
-// TODO: Adicionar os routers para as outras entidades aqui
+// TODO: Adicionar os routers para as outras entidades aqui (User, BookItem, Loan, etc.)
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor BiblioTech decolou na porta ${PORT}`);

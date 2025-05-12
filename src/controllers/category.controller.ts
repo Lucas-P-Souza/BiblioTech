@@ -3,191 +3,166 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// --- FUNÇÕES CRUD EXISTENTES (getAllCategories, getCategoryById, createCategory, etc.) ---
-// (Mantenha todo o código que já estava aqui para as funções anteriores)
-
+// LISTAR todas as categorias.
+// Permite filtrar por nome se o query param 'name' for fornecido (ex: /categories?name=Ficção)
+// Esta rota é PÚBLICA.
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name } = req.query;
+        const { name } = req.query; // Extrai o parâmetro 'name' da query string.
         let categories;
+
         if (name && typeof name === 'string' && name.trim() !== '') {
+            // Busca categorias contendo o termo (case-insensitive).
             categories = await prisma.category.findMany({
-                where: { name: { contains: name, mode: 'insensitive' } },
+                where: {
+                    name: {
+                        contains: name,
+                        mode: 'insensitive',
+                    },
+                },
             });
         } else {
+            // Busca todas as categorias se nenhum nome for fornecido.
             categories = await prisma.category.findMany();
         }
         res.status(200).json(categories);
     } catch (error: unknown) {
-        console.error("Erro ao listar categorias:", error);
-        res.status(500).json({ message: 'Erro interno ao buscar categorias.' });
+        console.error("Controller Error - getAllCategories:", error);
+        res.status(500).json({ message: 'Erro ao buscar categorias.' });
     }
 };
 
-export const getCategoryById = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
+// BUSCAR uma categoria específica pelo NOME.
+// O nome é fornecido como parâmetro na rota (ex: /categories/by-name/Ficção%20Científica).
+// Esta rota é PÚBLICA.
+// Requer que 'name' seja @unique no schema para Category.
+export const getCategoryByName = async (req: Request, res: Response): Promise<void> => {
+    const categoryName = req.params.name; // Extrai o nome dos parâmetros da rota.
     try {
-        const category = await prisma.category.findUnique({ where: { id } });
+        const category = await prisma.category.findUnique({
+            where: { name: categoryName }, // Busca pelo nome (que deve ser único).
+        });
+
         if (!category) {
-            res.status(404).json({ message: 'Categoria não encontrada com o ID fornecido.' });
+            res.status(404).json({ message: 'Categoria não encontrada com o nome fornecido.' });
             return;
         }
         res.status(200).json(category);
     } catch (error: unknown) {
-        console.error(`Erro ao buscar categoria com ID ${id}:`, error);
-        res.status(500).json({ message: 'Erro interno ao buscar a categoria.' });
+        console.error(`Controller Error - getCategoryByName (Name: ${categoryName}):`, error);
+        res.status(500).json({ message: 'Erro ao buscar categoria por nome.' });
     }
 };
 
+// CRIAR uma nova categoria.
+// Esta rota é PRIVADA (requer autenticação JWT).
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, description } = req.body;
+
         if (!name) {
             res.status(400).json({ message: 'O campo "name" (nome da categoria) é obrigatório.' });
             return;
         }
-        const newCategory = await prisma.category.create({ data: { name, description } });
-        res.status(201).json(newCategory);
+
+        const newCategory = await prisma.category.create({
+            data: { name, description },
+        });
+        res.status(201).json(newCategory); // 201: Created
     } catch (error: unknown) {
-        console.error("Erro ao criar categoria:", error);
+        console.error("Controller Error - createCategory:", error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2002') {
-            res.status(409).json({ message: 'Já existe uma categoria com este nome.' });
+            res.status(409).json({ message: 'Já existe uma categoria com este nome.' }); // 409: Conflict
             return;
         }
-        res.status(500).json({ message: 'Erro interno ao criar a categoria.' });
+        res.status(500).json({ message: 'Erro ao criar categoria.' });
     }
 };
 
-export const updateCategory = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-    if (name === '') {
-        res.status(400).json({ message: 'O nome não pode ser vazio para atualização.' });
-        return;
-    }
-    if (name === undefined && description === undefined) {
+// ATUALIZAR uma categoria existente, identificada pelo NOME ATUAL.
+// O novo nome e/ou descrição são fornecidos no corpo da requisição.
+// Esta rota é PRIVADA.
+// Requer que 'name' seja @unique no schema.
+export const updateCategoryByName = async (req: Request, res: Response): Promise<void> => {
+    const currentName = req.params.name; // Nome atual da categoria, vindo da URL.
+    const { name: newName, description } = req.body; // Novos dados.
+
+    if (newName === undefined && description === undefined) {
         res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
         return;
     }
-    try {
-        const dataToUpdate: { name?: string; description?: string } = {};
-        if (name !== undefined) dataToUpdate.name = name;
-        if (description !== undefined) dataToUpdate.description = description;
-        const updatedCategory = await prisma.category.update({ where: { id }, data: dataToUpdate });
-        res.status(200).json(updatedCategory);
-    } catch (error: unknown) {
-        console.error(`Erro ao atualizar categoria com ID ${id}:`, error);
-        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
-            if (error.code === 'P2025') {
-                res.status(404).json({ message: 'Categoria não encontrada para atualização.' }); return;
-            }
-            if (error.code === 'P2002') {
-                res.status(409).json({ message: 'Já existe uma categoria com este nome.' }); return;
-            }
-        }
-        res.status(500).json({ message: 'Erro interno ao atualizar a categoria.' });
-    }
-};
-
-export const deleteCategory = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    try {
-        await prisma.category.delete({ where: { id } });
-        res.status(204).send();
-    } catch (error: unknown) {
-        console.error(`Erro ao deletar categoria com ID ${id}:`, error);
-        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2025') {
-            res.status(404).json({ message: 'Categoria não encontrada para deleção.' }); return;
-        }
-        // Adicione tratamento para P2003 se Categoria tem livros associados e a deleção é restrita
-        res.status(500).json({ message: 'Erro interno ao deletar a categoria.' });
-    }
-};
-
-export const deleteAllCategories = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const deleteResult = await prisma.category.deleteMany({});
-        res.status(200).json({ message: 'Todas as categorias foram deletadas.', count: deleteResult.count });
-    } catch (error: unknown) {
-        console.error("Erro ao deletar todas as categorias:", error);
-        res.status(500).json({ message: 'Erro interno ao deletar todas as categorias.' });
-    }
-};
-
-
-// --- NOVAS FUNÇÕES PARA ATUALIZAR E DELETAR POR NOME ---
-
-// --- ATUALIZAR uma categoria pelo NOME ---
-export const updateCategoryByName = async (req: Request, res: Response): Promise<void> => {
-    const categoryName = req.params.name; // Pega o nome dos parâmetros da rota
-    const { name, description } = req.body; // Novos dados para atualizar
-
-    if (name === '') { // Se o novo 'name' foi enviado, não pode ser vazio
+    if (newName === '') { // Se um novo nome for fornecido, não pode ser vazio.
         res.status(400).json({ message: 'O novo nome não pode ser vazio para atualização.' });
         return;
     }
-    // Se nenhum campo for enviado para atualização
-    if (name === undefined && description === undefined) {
-        res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
-        return;
-    }
 
     try {
         const dataToUpdate: { name?: string; description?: string } = {};
-        if (name !== undefined) dataToUpdate.name = name; // Novo nome
+        if (newName !== undefined) dataToUpdate.name = newName;
         if (description !== undefined) dataToUpdate.description = description;
 
         const updatedCategory = await prisma.category.update({
-            where: { name: categoryName }, // Busca pelo nome atual para atualizar
+            where: { name: currentName }, // Busca pelo nome atual para realizar a atualização.
             data: dataToUpdate,
         });
         res.status(200).json(updatedCategory);
     } catch (error: unknown) {
-        console.error(`Erro ao atualizar categoria com nome ${categoryName}:`, error);
+        console.error(`Controller Error - updateCategoryByName (Nome Atual: ${currentName}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
-            if (error.code === 'P2025') { // Registro para atualizar não encontrado (nenhuma categoria com esse nome)
-                res.status(404).json({ message: 'Categoria não encontrada para atualização pelo nome fornecido.' });
+            if (error.code === 'P2025') { // Categoria com 'currentName' não encontrada.
+                res.status(404).json({ message: 'Categoria não encontrada para atualização (nome).' });
                 return;
             }
-            if (error.code === 'P2002') { // Violação de constraint única (se o novo nome já existir)
+            if (error.code === 'P2002') { // Violação de constraint única (se o 'newName' já existir).
                 res.status(409).json({ message: 'Já existe uma categoria com o novo nome fornecido.' });
                 return;
             }
         }
-        res.status(500).json({ message: 'Erro interno ao atualizar a categoria pelo nome.' });
+        res.status(500).json({ message: 'Erro ao atualizar categoria por nome.' });
     }
 };
 
-// --- DELETAR uma categoria pelo NOME ---
+// DELETAR uma categoria específica pelo NOME.
+// Esta rota é PRIVADA.
+// Requer que 'name' seja @unique no schema.
 export const deleteCategoryByName = async (req: Request, res: Response): Promise<void> => {
-    const categoryName = req.params.name; // Pega o nome dos parâmetros da rota
+    const categoryName = req.params.name; // Nome da categoria a ser deletada.
     try {
-        // Primeiro, verificamos se a categoria existe para dar uma mensagem 404 mais precisa
-        // já que deleteMany não retorna erro se nada for deletado.
         const categoryExists = await prisma.category.findUnique({
             where: { name: categoryName },
         });
 
         if (!categoryExists) {
-            res.status(404).json({ message: 'Categoria não encontrada para deleção pelo nome fornecido.' });
+            res.status(404).json({ message: 'Categoria não encontrada para deleção (nome).' });
             return;
         }
 
-        // Se existe, tentamos deletar. deleteMany é usado aqui porque where em campo não-id/não-unique
-        // poderia, em teoria, afetar múltiplos registros se 'name' não fosse unique.
-        // Mas como estamos assumindo/garantindo que 'name' é unique, isso vai deletar no máximo 1.
         await prisma.category.delete({
             where: { name: categoryName },
         });
-        res.status(204).send(); // 204 No Content
+        res.status(204).send(); // 204: No Content
     } catch (error: unknown) {
-        console.error(`Erro ao deletar categoria com nome ${categoryName}:`, error);
-        // Se o erro P2025 ocorrer aqui, é inesperado, pois já verificamos a existência.
-        // Mas podemos tratar outros erros, como P2003 (foreign key constraint)
+        console.error(`Controller Error - deleteCategoryByName (Name: ${categoryName}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2003') {
-            res.status(409).json({ message: 'Não é possível deletar a categoria pois ela está associada a um ou mais livros.' });
+            // Erro se a categoria estiver associada a livros e a deleção for restrita.
+            res.status(409).json({ message: 'Não é possível deletar a categoria, pois ela está associada a um ou mais livros.' });
             return;
         }
-        res.status(500).json({ message: 'Erro interno ao deletar a categoria pelo nome.' });
+        res.status(500).json({ message: 'Erro ao deletar categoria por nome.' });
+    }
+};
+
+// DELETAR TODAS as categorias.
+// Esta rota é PRIVADA e idealmente restrita a roles específicos (ex: Admin).
+export const deleteAllCategories = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const deleteResult = await prisma.category.deleteMany({});
+        res.status(200).json({
+            message: 'Todas as categorias foram deletadas (que não estavam em uso por livros, dependendo das constraints).',
+            count: deleteResult.count
+        });
+    } catch (error: unknown) {
+        console.error("Controller Error - deleteAllCategories:", error);
+        res.status(500).json({ message: 'Erro ao deletar todas as categorias.' });
     }
 };

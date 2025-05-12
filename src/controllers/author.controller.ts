@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// --- LISTAR todos os autores (com filtro opcional por nome) ---
+// Busca todos os autores, permitindo filtrar por nome via query param.
 export const getAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query;
@@ -23,12 +23,12 @@ export const getAllAuthors = async (req: Request, res: Response): Promise<void> 
         }
         res.status(200).json(authors);
     } catch (error: unknown) {
-        console.error("Erro ao listar autores:", error);
-        res.status(500).json({ message: 'Erro interno ao buscar autores.' });
+        console.error("Controller Error - getAllAuthors:", error);
+        res.status(500).json({ message: 'Erro ao buscar autores.' });
     }
 };
 
-// --- BUSCAR um autor pelo ID ---
+// Busca um autor específico pelo seu ID (UUID).
 export const getAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -37,18 +37,17 @@ export const getAuthorById = async (req: Request, res: Response): Promise<void> 
         });
 
         if (!author) {
-            res.status(404).json({ message: 'Autor não encontrado com o ID fornecido.' });
+            res.status(404).json({ message: 'Autor não encontrado (ID).' });
             return;
         }
         res.status(200).json(author);
     } catch (error: unknown) {
-        // Tratar erros como ID inválido no formato UUID, se necessário
-        console.error(`Erro ao buscar autor com ID ${id}:`, error);
-        res.status(500).json({ message: 'Erro interno ao buscar o autor.' });
+        console.error(`Controller Error - getAuthorById (ID: ${id}):`, error);
+        res.status(500).json({ message: 'Erro ao buscar autor por ID.' });
     }
 };
 
-// --- CRIAR um novo autor ---
+// Cria um novo autor.
 export const createAuthor = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, biography } = req.body;
@@ -63,85 +62,135 @@ export const createAuthor = async (req: Request, res: Response): Promise<void> =
         });
         res.status(201).json(newAuthor);
     } catch (error: unknown) {
-        console.error("Erro ao criar autor:", error);
+        console.error("Controller Error - createAuthor:", error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2002') {
-            // Supondo que 'name' no seu schema.prisma possa ter uma constraint @unique
-            // Ou qualquer outro campo que possa causar P2002 (unique constraint violation)
-            res.status(409).json({ message: 'Já existe um autor com estes dados (ex: nome duplicado).' });
+            res.status(409).json({ message: 'Já existe um autor com este nome.' });
             return;
         }
-        res.status(500).json({ message: 'Erro interno ao criar o autor.' });
+        res.status(500).json({ message: 'Erro ao criar autor.' });
     }
 };
 
-// --- ATUALIZAR um autor existente ---
-export const updateAuthor = async (req: Request, res: Response): Promise<void> => {
+// ATUALIZA um autor existente pelo seu ID (UUID).
+export const updateAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name, biography } = req.body;
 
-    if (name === '') { // Se 'name' foi enviado, não pode ser vazio
-        res.status(400).json({ message: 'O nome não pode ser vazio para atualização.' });
-        return;
-    }
     if (name === undefined && biography === undefined) {
         res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
         return;
     }
-
+    if (name === '') {
+        res.status(400).json({ message: 'O nome não pode ser vazio para atualização.' });
+        return;
+    }
     try {
         const dataToUpdate: { name?: string; biography?: string } = {};
         if (name !== undefined) dataToUpdate.name = name;
         if (biography !== undefined) dataToUpdate.biography = biography;
-
         const updatedAuthor = await prisma.author.update({
             where: { id },
             data: dataToUpdate,
         });
         res.status(200).json(updatedAuthor);
     } catch (error: unknown) {
-        console.error(`Erro ao atualizar autor com ID ${id}:`, error);
+        console.error(`Controller Error - updateAuthorById (ID: ${id}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
-            if (error.code === 'P2025') { // Registro para atualizar não encontrado
-                res.status(404).json({ message: 'Autor não encontrado para atualização.' });
-                return;
+            if (error.code === 'P2025') {
+                res.status(404).json({ message: 'Autor não encontrado para atualização (ID).' }); return;
             }
-            if (error.code === 'P2002') { // Violação de constraint única
-                res.status(409).json({ message: 'Já existe um autor com este nome (ou outro campo único).' });
-                return;
+            if (error.code === 'P2002') {
+                res.status(409).json({ message: 'Já existe um autor com o novo nome fornecido.' }); return;
             }
         }
-        res.status(500).json({ message: 'Erro interno ao atualizar o autor.' });
+        res.status(500).json({ message: 'Erro ao atualizar autor por ID.' });
     }
 };
 
-// --- DELETAR um autor específico pelo ID ---
-export const deleteAuthor = async (req: Request, res: Response): Promise<void> => {
+// ATUALIZA um autor existente pelo seu NOME.
+export const updateAuthorByName = async (req: Request, res: Response): Promise<void> => {
+    const currentName = req.params.name;
+    const { name: newName, biography } = req.body;
+    if (newName === undefined && biography === undefined) {
+        res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
+        return;
+    }
+    if (newName === '') {
+        res.status(400).json({ message: 'O novo nome não pode ser vazio para atualização.' });
+        return;
+    }
+    try {
+        const dataToUpdate: { name?: string; biography?: string } = {};
+        if (newName !== undefined) dataToUpdate.name = newName;
+        if (biography !== undefined) dataToUpdate.biography = biography;
+        const updatedAuthor = await prisma.author.update({
+            where: { name: currentName },
+            data: dataToUpdate,
+        });
+        res.status(200).json(updatedAuthor);
+    } catch (error: unknown) {
+        console.error(`Controller Error - updateAuthorByName (Nome Atual: ${currentName}):`, error);
+        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
+            if (error.code === 'P2025') {
+                res.status(404).json({ message: 'Autor não encontrado para atualização (nome).' }); return;
+            }
+            if (error.code === 'P2002') {
+                res.status(409).json({ message: 'Já existe um autor com o novo nome fornecido.' }); return;
+            }
+        }
+        res.status(500).json({ message: 'Erro ao atualizar autor por nome.' });
+    }
+};
+
+// Deleta um autor específico pelo seu nome.
+export const deleteAuthorByName = async (req: Request, res: Response): Promise<void> => {
+    const authorName = req.params.name;
+    try {
+        const authorExists = await prisma.author.findUnique({ where: { name: authorName } });
+        if (!authorExists) {
+            res.status(404).json({ message: 'Autor não encontrado para deleção (nome).' }); return;
+        }
+        await prisma.author.delete({ where: { name: authorName } });
+        res.status(204).send();
+    } catch (error: unknown) {
+        console.error(`Controller Error - deleteAuthorByName (Name: ${authorName}):`, error);
+        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2003') {
+            res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); return;
+        }
+        res.status(500).json({ message: 'Erro ao deletar autor por nome.' });
+    }
+};
+
+// Deleta um autor específico pelo seu ID (UUID).
+export const deleteAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        await prisma.author.delete({
-            where: { id },
-        });
-        res.status(204).send(); // 204 No Content
+        await prisma.author.delete({ where: { id } });
+        res.status(204).send();
     } catch (error: unknown) {
-        console.error(`Erro ao deletar autor com ID ${id}:`, error);
-        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2025') {
-            res.status(404).json({ message: 'Autor não encontrado para deleção.' });
-            return;
+        console.error(`Controller Error - deleteAuthorById (ID: ${id}):`, error);
+        if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
+            if (error.code === 'P2025') {
+                res.status(404).json({ message: 'Autor não encontrado para deleção (ID).' }); return;
+            }
+            if (error.code === 'P2003') {
+                res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); return;
+            }
         }
-        res.status(500).json({ message: 'Erro interno ao deletar o autor.' });
+        res.status(500).json({ message: 'Erro ao deletar autor por ID.' });
     }
 };
 
-// --- DELETAR TODOS os autores ---
+// Deleta TODOS os autores.
 export const deleteAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await prisma.author.deleteMany({});
         res.status(200).json({
-            message: 'Todos os autores foram deletados com sucesso.',
+            message: 'Todos os autores foram deletados (que não estavam em uso por livros, dependendo das constraints).',
             count: deleteResult.count
         });
     } catch (error: unknown) {
-        console.error("Erro ao deletar todos os autores:", error);
-        res.status(500).json({ message: 'Erro interno ao deletar todos os autores.' });
+        console.error("Controller Error - deleteAllAuthors:", error);
+        res.status(500).json({ message: 'Erro ao deletar todos os autores.' });
     }
 };

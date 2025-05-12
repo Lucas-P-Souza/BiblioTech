@@ -1,111 +1,152 @@
-### =============================================
-### LIMPAR TUDO (para começar do zero, se quiser)
-### CUIDADO: ISTO APAGA TODOS OS AUTORES!
-### =============================================
+### Variáveis (Opcional - substitua os valores diretamente nas URLs se preferir)
+# @admin_token = SEU_TOKEN_DE_ADMIN_OU_MANAGER_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_OU_ADMIN_AQUI
+# @author_id_para_teste_id = # Copie um ID (UUID) de um autor criado para testar rotas por ID
+# @author_nome_para_teste_by_name = "Autor Para Teste Por Nome"
+
+### ======================================================================
+### AUTHOR API TESTS - CRUD COMPLETO (ID e NOME) E PROTEÇÃO JWT
+### ======================================================================
+
+### PASSO 1: Limpar todos os autores (REQUER TOKEN de Admin/Manager)
+# Antes de rodar, obtenha um token de Admin/Manager e cole abaixo:
 DELETE http://localhost:3000/authors
+Authorization: Bearer {{admin_token}} 
+# Se não definiu a variável, cole o token diretamente: Bearer SEU_TOKEN_AQUI
 
-### Separador
+
 ### ---
-
-### (Author) Listar todos os autores (deve estar vazio após o DELETE ALL)
+### PASSO 2: Listar todos os autores (PÚBLICO - deve estar vazio)
 GET http://localhost:3000/authors
 Accept: application/json
 
-### =============================================
-### CRIAR AUTORES
-### =============================================
 
-### (Author) Criar Autor 1: Machado de Assis
-# Copie o ID da resposta e cole na variável @author_id_machado ou use diretamente abaixo
+### ======================================================================
+### PASSO 3: CRIAR AUTORES (REQUER TOKEN - qualquer bibliotecário logado)
+### ======================================================================
+
+### Criar Autor 1: "Machado de Assis" (REQUER TOKEN)
+# Antes de rodar, obtenha um token (pode ser de Staff) e cole abaixo:
 POST http://localhost:3000/authors
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
   "name": "Machado de Assis",
-  "biography": "Escritor brasileiro, considerado o maior nome da literatura nacional."
+  "biography": "Bruxo do Cosme Velho."
 }
+### Anote o ID de "Machado de Assis" da resposta para usar no PASSO 5 e 7
 
-### Separador
 ### ---
-
-### (Author) Criar Autor 2: Clarice Lispector
-# Copie o ID da resposta e cole na variável @author_id_clarice ou use diretamente abaixo
+### Criar Autor 2: "Clarice Lispector" (REQUER TOKEN)
 POST http://localhost:3000/authors
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
   "name": "Clarice Lispector",
-  "biography": "Escritora e jornalista nascida na Ucrânia e naturalizada brasileira."
+  "biography": "Escritora ucraniana-brasileira."
 }
-
-### =============================================
-### LER AUTORES
-### =============================================
-
-### (Author) Listar todos os autores (agora deve ter Machado e Clarice)
-GET http://localhost:3000/authors
-Accept: application/json
+### Anote o ID de "Clarice Lispector" da resposta
 
 ### ---
-
-### (Author) Listar autores filtrando por nome "Clarice"
-GET http://localhost:3000/authors?name=Clarice
-Accept: application/json
-
-### ---
-
-### (Author) Buscar Machado de Assis pelo ID
-# Substitua pelo ID real do Machado de Assis que você copiou
-GET http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
-Accept: application/json
-
-
-### =============================================
-### ATUALIZAR AUTOR
-### =============================================
-
-### (Author) Atualizar Clarice Lispector
-# Substitua pelo ID real da Clarice Lispector que você copiou
-PUT http://localhost:3000/authors/500cab71-12fe-4f9e-918e-0fae5ec1e024
+### Criar Autor 3: "Autor Para Teste Por Nome" (REQUER TOKEN)
+POST http://localhost:3000/authors
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "name": "Clarice Lispector (Rainha)",
-  "biography": "Uma das mais importantes escritoras do século XX. Gênia."
+  "name": "Autor Para Teste Por Nome",
+  "biography": "Este autor será usado para testar update/delete por nome."
+}
+
+
+### ======================================================================
+### PASSO 4: LISTAR E BUSCAR AUTORES (PÚBLICO)
+### ======================================================================
+
+### Listar todos os autores (deve ter 3 agora)
+GET http://localhost:3000/authors
+Accept: application/json
+
+### ---
+### Listar autores filtrando por nome "Machado" (PÚBLICO)
+GET http://localhost:3000/authors?name=Machado
+Accept: application/json
+
+### ---
+### Buscar "Machado de Assis" pelo ID (PÚBLICO)
+# SUBSTITUA "COLOQUE_O_ID_DO_MACHADO_AQUI" pelo ID real
+GET http://localhost:3000/authors/id/COLOQUE_O_ID_DO_MACHADO_AQUI
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 5: ATUALIZAR AUTORES (REQUER TOKEN)
+### ======================================================================
+
+### Atualizar "Machado de Assis" PELO ID (REQUER TOKEN)
+# SUBSTITUA "COLOQUE_O_ID_DO_MACHADO_AQUI" pelo ID real
+PUT http://localhost:3000/authors/id/COLOQUE_O_ID_DO_MACHADO_AQUI
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Joaquim M. Machado de Assis",
+  "biography": "Um dos maiores da língua portuguesa."
 }
 
 ### ---
-### (Author) Verificar a atualização da Clarice (buscando pelo ID dela)
-GET http://localhost:3000/authors/500cab71-12fe-4f9e-918e-0fae5ec1e024
-Accept: application/json
-
-
-### =============================================
-### DELETAR AUTOR INDIVIDUAL
-### =============================================
-
-### (Author) Deletar Machado de Assis
-# Substitua pelo ID real do Machado de Assis
-DELETE http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
-
-### ---
-### (Author) Tentar buscar Machado de Assis (deve dar 404 Not Found)
-GET http://localhost:3000/authors/f4404047-0a1d-49e8-b669-2b6c2cfa7505
+### Verificar atualização do Machado (PÚBLICO - buscando pelo ID)
+GET http://localhost:3000/authors/id/COLOQUE_O_ID_DO_MACHADO_AQUI
 Accept: application/json
 
 ### ---
-### (Author) Listar todos os autores (Machado não deve estar mais, só Clarice atualizada)
+### Atualizar "Autor Para Teste Por Nome" PELO NOME para "Nome Atualizado Via Teste" (REQUER TOKEN)
+# O nome na URL precisa ser URL-Encoded se tiver espaços. O REST Client faz isso.
+PUT http://localhost:3000/authors/by-name/Autor Para Teste Por Nome
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Nome Atualizado Via Teste",
+  "biography": "Biografia foi atualizada pelo nome."
+}
+
+### ---
+### Verificar atualização (PÚBLICO - buscando pelo novo nome)
+GET http://localhost:3000/authors?name=Nome%20Atualizado%20Via%20Teste
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 6: DELETAR AUTORES (REQUER TOKEN)
+### ======================================================================
+
+### Deletar "Joaquim M. Machado de Assis" PELO NOME (REQUER TOKEN)
+DELETE http://localhost:3000/authors/by-name/Joaquim M. Machado de Assis
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Deletar "Clarice Lispector" PELO ID (REQUER TOKEN)
+# SUBSTITUA "COLOQUE_O_ID_DA_CLARICE_AQUI" pelo ID real dela
+DELETE http://localhost:3000/authors/id/COLOQUE_O_ID_DA_CLARICE_AQUI
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Listar todos os autores (deve ter só "Nome Atualizado Via Teste" agora)
 GET http://localhost:3000/authors
 Accept: application/json
 
 
-### =============================================
-### DELETAR TODOS OS AUTORES NOVAMENTE (para limpar no final do teste)
-### CUIDADO: ISTO APAGA TODOS OS AUTORES!
-### =============================================
+### ======================================================================
+### PASSO 7: DELETAR TODOS OS AUTORES (REQUER TOKEN de Admin/Manager)
+### ======================================================================
 DELETE http://localhost:3000/authors
+Authorization: Bearer {{admin_token}} 
 
 ### ---
-### (Author) Listar todos os autores (deve estar vazio de novo)
+### Listar todos os autores (PÚBLICO - deve estar vazio novamente)
 GET http://localhost:3000/authors
 Accept: application/json
+

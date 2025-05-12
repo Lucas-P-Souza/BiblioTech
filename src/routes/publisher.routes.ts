@@ -1,41 +1,48 @@
 import { Router } from 'express';
+// Importa todas as funções do controller de editoras
 import {
     getAllPublishers,
-    createPublisher,
+    getPublisherByName,
     getPublisherById,
-    updatePublisherById, // Renomeei para clareza, já que temos updateByName
-    deletePublisherById, // Renomeei para clareza
-    deleteAllPublishers,
+    createPublisher,
+    updatePublisherById,
     updatePublisherByName,
-    deletePublisherByName
+    deletePublisherById,
+    deletePublisherByName,
+    deleteAllPublishers
 } from '../controllers/publisher.controller';
+
+// Importa os middlewares de autenticação e autorização
+import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
+// Importa o enum LibrarianRole para usar na autorização por role
+import { LibrarianRole } from '@prisma/client';
 
 const publisherRouter = Router();
 
-// Rotas para /publishers
+// --- Rotas para /publishers ---
 
-// GET /publishers -> Listar todas (com filtro opcional por nome)
-publisherRouter.get('/', getAllPublishers);
+// Rotas PÚBLICAS: Listar e buscar editoras
+publisherRouter.get('/', getAllPublishers); // Lista todas (com filtro opcional por nome)
+publisherRouter.get('/by-name/:name', getPublisherByName); // Busca por nome
+publisherRouter.get('/id/:id', getPublisherById); // Busca por ID
 
-// POST /publishers -> Criar nova editora
-publisherRouter.post('/', createPublisher);
+// Rota PRIVADA: Criar uma nova editora
+publisherRouter.post('/', authenticateToken, createPublisher);
 
-// GET /publishers/:id -> Buscar por ID
-publisherRouter.get('/:id', getPublisherById);
+// Rotas PRIVADAS: Atualizar uma editora
+publisherRouter.put('/id/:id', authenticateToken, updatePublisherById); // Atualiza por ID
+publisherRouter.put('/by-name/:name', authenticateToken, updatePublisherByName); // Atualiza por nome
 
-// PUT /publishers/:id -> Atualizar por ID
-publisherRouter.put('/:id', updatePublisherById);
+// Rotas PRIVADAS: Deletar uma editora
+publisherRouter.delete('/id/:id', authenticateToken, deletePublisherById); // Deleta por ID
+publisherRouter.delete('/by-name/:name', authenticateToken, deletePublisherByName); // Deleta por nome
 
-// DELETE /publishers/:id -> Deletar por ID
-publisherRouter.delete('/:id', deletePublisherById);
-
-// DELETE /publishers -> Deletar TODAS as editoras
-publisherRouter.delete('/', deleteAllPublishers);
-
-// PUT /publishers/by-name/:name -> Atualizar por NOME
-publisherRouter.put('/by-name/:name', updatePublisherByName);
-
-// DELETE /publishers/by-name/:name -> Deletar por NOME
-publisherRouter.delete('/by-name/:name', deletePublisherByName);
+// Rota PRIVADA e RESTRITA A ROLES: Deletar TODAS as editoras
+publisherRouter.delete(
+    '/', // Rota: DELETE /publishers
+    authenticateToken,
+    authorizeRoles(LibrarianRole.Admin, LibrarianRole.Manager), // Apenas Admin ou Manager
+    deleteAllPublishers
+);
 
 export default publisherRouter;

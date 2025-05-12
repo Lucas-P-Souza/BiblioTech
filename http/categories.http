@@ -1,115 +1,116 @@
-### =============================================
-### CATEGORY API TESTS
-### =============================================
+### Variáveis (Opcional)
+# @admin_token = SEU_TOKEN_DE_ADMIN_OU_MANAGER_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_OU_ADMIN_AQUI
+# @categoria_nome_teste = "Suspense Psicológico"
 
-### Limpar todas as categorias (para começar do zero, se quiser)
+### ======================================================================
+### CATEGORY API TESTS - FOCO EM OPERAÇÕES POR NOME
+### ======================================================================
+
+### PASSO 1: Limpar todas as categorias (REQUER TOKEN de Admin/Manager)
 DELETE http://localhost:3000/categories
+Authorization: Bearer {{admin_token}} 
+
 
 ### ---
-### Listar todas as categorias (deve estar vazio)
+### PASSO 2: Listar todas as categorias (PÚBLICO - deve estar vazio)
 GET http://localhost:3000/categories
 Accept: application/json
 
-### ---
-### Criar Categoria 1: Ficção Científica
+
+### ======================================================================
+### PASSO 3: CRIAR CATEGORIAS (REQUER TOKEN)
+### ======================================================================
+
+### Criar Categoria 1: "Ficção Científica" (REQUER TOKEN)
 POST http://localhost:3000/categories
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
   "name": "Ficção Científica",
-  "description": "Livros sobre futuros imaginários, ciência e tecnologia avançada."
+  "description": "Explora conceitos imaginativos baseados na ciência."
 }
 
 ### ---
-### Criar Categoria 2: Romance Histórico
+### Criar Categoria 2: "{{@categoria_nome_teste}}" (REQUER TOKEN)
 POST http://localhost:3000/categories
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "name": "Romance Histórico"
+  "name": "{{@categoria_nome_teste}}",
+  "description": "Tramas que mexem com a mente."
 }
 
-### ---
+
+### ======================================================================
+### PASSO 4: LISTAR E BUSCAR CATEGORIAS (PÚBLICO)
+### ======================================================================
+
 ### Listar todas as categorias (deve ter 2 agora)
 GET http://localhost:3000/categories
 Accept: application/json
 
 ### ---
-### Listar categorias filtrando por nome "Ficção"
+### Listar categorias filtrando por nome "Ficção" (PÚBLICO)
 GET http://localhost:3000/categories?name=Ficção
 Accept: application/json
 
 ### ---
-### Buscar uma categoria pelo ID
-# COPIE O ID DA CATEGORIA "Ficção Científica" DA RESPOSTA DO POST ACIMA E COLE AQUI
-GET http://localhost:3000/categories/c6186488-ad07-4d01-acfc-2b5f137f5857
+### Buscar "{{@categoria_nome_teste}}" PELO NOME (PÚBLICO)
+# Se o nome tiver espaços, o REST Client faz o URL encoding (ex: Suspense%20Psicológico)
+GET http://localhost:3000/categories/by-name/{{@categoria_nome_teste}}
 Accept: application/json
 
-### ---
-### Atualizar a categoria "Romance Histórico"
-# COPIE O ID DA CATEGORIA "Romance Histórico" E COLE AQUI
-PUT http://localhost:3000/categories/ea81d063-7076-44f6-9e4b-c36d582301df
+
+### ======================================================================
+### PASSO 5: ATUALIZAR CATEGORIA PELO NOME (REQUER TOKEN)
+### ======================================================================
+
+### Atualizar "{{@categoria_nome_teste}}" PELO NOME para "Thriller Psicológico" (REQUER TOKEN)
+PUT http://localhost:3000/categories/by-name/{{@categoria_nome_teste}}
 Content-Type: application/json
+Authorization: Bearer {{staff_token}}
 
 {
-  "name": "Romance Histórico Medieval",
-  "description": "Romances ambientados na Idade Média."
+  "name": "Thriller Psicológico",
+  "description": "Suspense intenso com foco na psicologia dos personagens."
 }
 
 ### ---
-### Deletar a categoria "Romance Histórico Medieval" (já atualizada)
-# COPIE O ID DA CATEGORIA "Romance Histórico Medieval" E COLE AQUI
-DELETE http://localhost:3000/categories/ea81d063-7076-44f6-9e4b-c36d582301df
+### Verificar atualização (PÚBLICO - buscando pelo novo nome "Thriller Psicológico")
+GET http://localhost:3000/categories/by-name/Thriller Psicológico
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 6: DELETAR CATEGORIA PELO NOME (REQUER TOKEN)
+### ======================================================================
+
+### Deletar "Ficção Científica" PELO NOME (REQUER TOKEN)
+DELETE http://localhost:3000/categories/by-name/Ficção Científica
+Authorization: Bearer {{staff_token}}
 
 ### ---
-### Listar todas as categorias (só deve ter "Ficção Científica" agora)
+### Verificar se "Ficção Científica" foi deletada (PÚBLICO - buscando pelo nome)
+GET http://localhost:3000/categories/by-name/Ficção Científica
+Accept: application/json
+# Deve retornar 404 Not Found
+
+### ---
+### Listar todas as categorias (deve ter só "Thriller Psicológico" agora)
 GET http://localhost:3000/categories
 Accept: application/json
 
-### =============================================
-### CATEGORY API TESTS - OPERAÇÕES POR NOME
-### (Assumindo que 'name' é @unique no schema.prisma para Category)
-### =============================================
+
+### ======================================================================
+### PASSO 7: DELETAR TODAS AS CATEGORIAS (REQUER TOKEN de Admin/Manager)
+### ======================================================================
+DELETE http://localhost:3000/categories
+Authorization: Bearer {{admin_token}} 
 
 ### ---
-### Criar uma categoria para teste (Ex: "Fantasia")
-POST http://localhost:3000/categories
-Content-Type: application/json
-
-{
-  "name": "Fantasia",
-  "description": "Livros com elementos mágicos e mundos imaginários."
-}
-
-### ---
-### Atualizar a categoria "Fantasia" PELO NOME para "Fantasia Épica"
-# OBS: Se o nome "Fantasia" tiver espaços ou caracteres especiais, ele precisa estar URL-Encoded na linha abaixo.
-# Ex: "Fantasia Medieval" viraria "Fantasia%20Medieval"
-PUT http://localhost:3000/categories/by-name/Fantasia
-Content-Type: application/json
-
-{
-  "name": "Fantasia Épica",
-  "description": "Subgênero da fantasia caracterizado pelo seu escopo e temas grandiosos."
-}
-
-### ---
-### Verificar a atualização (buscando todos, ou pelo nome "Fantasia Épica")
-GET http://localhost:3000/categories?name=Fantasia%20Épica
-Accept: application/json
-
-### ---
-### Deletar a categoria "Fantasia Épica" PELO NOME
-# OBS: URL-Encode o nome se necessário
-DELETE http://localhost:3000/categories/by-name/Fantasia%20Épica
-
-### ---
-### Verificar se "Fantasia Épica" foi deletada (buscando pelo nome)
-GET http://localhost:3000/categories?name=Fantasia%20Épica
-Accept: application/json
-# Resultado esperado: [] (array vazio)
-
-### ---
-### Listar todas as categorias (para ver o estado final)
+### Listar todas as categorias (PÚBLICO - deve estar vazio novamente)
 GET http://localhost:3000/categories
 Accept: application/json

@@ -1,87 +1,176 @@
-### ======================================================================
-### LIBRARIAN API TESTS - Foco em EmployeeID e CRUD completo
-### ======================================================================
+### Variáveis (Defina após obter os tokens das etapas de login)
+@admin_token_ana = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWJyYXJpYW5JZCI6ImRlZTEwZjNjLWI5MTgtNGE0MC1hNmEyLThlMTg5ZjU5MzY1MSIsImVtYWlsIjoiYW5hLmZpcnN0YWRtaW5AYmlibGlvdGVjaC5jb20iLCJyb2xlIjoiQWRtaW4iLCJuYW1lIjoiQW5hIEFkbWluIChQcmltZWlyYSkiLCJpYXQiOjE3NDcwNzQyMTksImV4cCI6MTc0NzA5MjIxOX0.9bUCaAs-yp0T6ZdHfxYz24MADb4ofcf0nAR3l_PAdKk
+@manager_token_bruno = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWJyYXJpYW5JZCI6IjYyNzgzYmVlLTcxZjYtNGUwMC05ODI1LThmZmY0ZGNkNmQ2NSIsImVtYWlsIjoiYnJ1bm8ubWFuYWdlckBiaWJsaW90ZWNoLmNvbSIsInJvbGUiOiJNYW5hZ2VyIiwibmFtZSI6IkJydW5vIE1hbmFnZXIiLCJpYXQiOjE3NDcwNzkwMDMsImV4cCI6MTc0NzA5NzAwM30.glqPIGKOQjeKpsHh9GNflukM1NdiLeOkfZ3JGVQM-H4
+@staff_token_carla = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWJyYXJpYW5JZCI6IjkzZDNlNTc3LTAyYmQtNDc2Mi05YTAxLWM5NTI2MzNiMDc0MiIsImVtYWlsIjoiY2FybGEuc3RhZmZAYmlibGlvdGVjaC5jb20iLCJyb2xlIjoiU3RhZmYiLCJuYW1lIjoiQ2FybGEgU3RhZmYiLCJpYXQiOjE3NDcwNzkwNzMsImV4cCI6MTc0NzA5NzA3M30.QVuak2ydarGlnOo5IGMybcZeoOD9oav7x1iIXdkGbKQ
 
-### PASSO 0: Limpar todos os Bibliotecários (CUIDADO!)
-DELETE http://localhost:3000/librarians
-
-### ---
-### PASSO 1: Listar todos os Bibliotecários (deve estar vazio)
-GET http://localhost:3000/librarians
-Accept: application/json
+# IDs de funcionário para os testes (estes são usados nas URLs e corpos JSON abaixo)
+@employee_id_bruno_manager = "MAN001"
+@employee_id_carla_staff = "STF001"
 
 ### ======================================================================
-### PASSO 2: CRIAR BIBLIOTECÁRIOS com EmployeeIDs conhecidos
+### LIBRARIAN API TESTS - FLUXO COM CRIAÇÃO DO PRIMEIRO ADMIN
 ### ======================================================================
 
-### Criar Bibliotecário 1: "Ana Supervisora" com EmployeeID {{employee_id_ana}}
+### PASSO 0: Limpar todos os Bibliotecários (OPCIONAL - REQUER TOKEN ADMIN SE JÁ EXISTIR UM)
+# DELETE http://localhost:3000/librarians
+# Authorization: Bearer SEU_TOKEN_ADMIN_DE_SESSAO_ANTERIOR_AQUI
+
+
+### ======================================================================
+### PASSO 1: CRIAR O PRIMEIRO BIBLIOTECÁRIO ADMIN (NÃO PRECISA DE TOKEN)
+### Esta requisição deve funcionar mesmo sem o cabeçalho Authorization.
+### O controller irá automaticamente definir o 'role' como Admin para este primeiro usuário.
+### Certifique-se de que o JSON abaixo é copiado EXATAMENTE como está.
+### ======================================================================
 POST http://localhost:3000/librarians
 Content-Type: application/json
 
 {
-  "name": "Ana Supervisora",
-  "email": "admin@bibliotech.com",
-  "employeeId": "SUP001", 
-  "password": "superSenhaAna123",
+  "name": "Ana Admin (Primeira)",
+  "email": "ana.firstadmin@bibliotech.com",
+  "employeeId": "ADM001",
+  "password": "primeiraAdminSenha123",
+  "role": "Staff"
+}
+# OBSERVAÇÃO FORA DO JSON: Mesmo que o 'role' seja "Staff" aqui, 
+# o controller deve forçar para "Admin" se este for o primeiro bibliotecário.
+# Anote o email e a senha da Ana para o próximo passo.
+
+
+### ======================================================================
+### PASSO 2: FAZER LOGIN COM O PRIMEIRO ADMIN PARA OBTER O TOKEN
+### ======================================================================
+# Use as credenciais da "Ana Admin (Primeira)" que você acabou de criar.
+POST http://localhost:3000/auth/librarian/login
+Content-Type: application/json
+
+{
+  "email": "ana.firstadmin@bibliotech.com", 
+  "password": "primeiraAdminSenha123"
+}
+### COPIE O VALOR DO CAMPO "token" DA RESPOSTA DESTE LOGIN.
+### DESCOMENTE A LINHA DA VARIÁVEL @admin_token_ana NO TOPO DESTE ARQUIVO E COLE O TOKEN LÁ.
+
+
+### ======================================================================
+### PASSO 3: CRIAR OUTROS BIBLIOTECÁRIOS USANDO O TOKEN DO ADMIN
+### ======================================================================
+
+### Criar Bibliotecário Manager: "Bruno Manager" (EmployeeID: {{@employee_id_bruno_manager}})
+POST http://localhost:3000/librarians
+Content-Type: application/json
+Authorization: Bearer {{admin_token_ana}} 
+
+{
+  "name": "Bruno Manager",
+  "email": "bruno.manager@bibliotech.com",
+  "employeeId": "MAN001",
+  "password": "managerSeguro456",
   "role": "Manager"
 }
 
 ### ---
-### Criar Bibliotecário 2: "Bruno Atendente" com EmployeeID {{employee_id_bruno}}
+### Criar Bibliotecário Staff: "Carla Staff" (EmployeeID: {{@employee_id_carla_staff}})
 POST http://localhost:3000/librarians
 Content-Type: application/json
+Authorization: Bearer {{admin_token_ana}} 
 
 {
-  "name": "Bruno Atendente",
-  "email": "bruno.atende@bibliotech.com",
-  "employeeId": "ATD007",
-  "password": "atendenteSeguro789",
-  "role": "Staff" 
+  "name": "Carla Staff",
+  "email": "carla.staff@bibliotech.com",
+  "employeeId": "STF001",
+  "password": "staffSenhaLegal789",
+  "role": "Staff"
 }
 
 
 ### ======================================================================
-### PASSO 3: LISTAR TODOS OS BIBLIOTECÁRIOS
+### PASSO 4: LISTAR E BUSCAR (TESTANDO PERMISSÕES DE ROLE)
 ### ======================================================================
 
+### Listar todos os Bibliotecários (com token Admin)
 GET http://localhost:3000/librarians
-Accept: application/json
-# Esperado: Lista com Ana e Bruno, sem passwordHash
-
-
-### ======================================================================
-### PASSO 4: OPERAÇÕES POR EMPLOYEE_ID
-### ======================================================================
-
-### Buscar "Ana Supervisora" PELO EMPLOYEE_ID {{employee_id_ana}}
-GET http://localhost:3000/librarians/employee/SUP001
+Authorization: Bearer {{admin_token_ana}}
 Accept: application/json
 
 ### ---
-### Atualizar "Bruno Atendente" (employeeId {{employee_id_bruno}}) PELO EMPLOYEE_ID
-PUT http://localhost:3000/librarians/employee/ATD007
+### Fazer login com Bruno Manager para obter o @manager_token_bruno
+POST http://localhost:3000/auth/librarian/login
 Content-Type: application/json
 
+{ 
+  "email": "bruno.manager@bibliotech.com", 
+  "password": "managerSeguro456" 
+}
+### COPIE O TOKEN DO BRUNO E COLOQUE EM @manager_token_bruno NO TOPO
+
+### ---
+### Listar todos os Bibliotecários (com token Manager)
+GET http://localhost:3000/librarians
+Authorization: Bearer {{manager_token_bruno}}
+Accept: application/json
+
+### ---
+### Fazer login com Carla Staff para obter o @staff_token_carla
+POST http://localhost:3000/auth/librarian/login
+Content-Type: application/json
+
+{ 
+  "email": "carla.staff@bibliotech.com", 
+  "password": "staffSenhaLegal789" 
+}
+### COPIE O TOKEN DA CARLA E COLOQUE EM @staff_token_carla NO TOPO
+
+### ---
+### Tentar Listar todos os Bibliotecários (com token Staff - DEVE FALHAR com 403 Forbidden)
+GET http://localhost:3000/librarians
+Authorization: Bearer {{staff_token_carla}}
+Accept: application/json
+
+### ---
+### Buscar "Ana Admin" PELO EMPLOYEE_ID "ADM001" (com token Manager)
+GET http://localhost:3000/librarians/employee/ADM001
+Authorization: Bearer {{manager_token_bruno}}
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 5: ATUALIZAR (REQUER TOKEN ADMIN)
+### ======================================================================
+
+### Atualizar "Carla Staff" (employeeId {{@employee_id_carla_staff}}) PELO EMPLOYEE_ID
+PUT http://localhost:3000/librarians/employee/STF001
+Content-Type: application/json
+Authorization: Bearer {{admin_token_ana}}
+
 {
-  "email": "bruno.promovido@bibliotech.com",
-  "role": "Admin"
+  "role": "Manager"
 }
 
 ### ---
-### Verificar a atualização do Bruno (buscando pelo employeeId {{employee_id_bruno}})
-GET http://localhost:3000/librarians/employee/ATD007
+### Verificar a atualização da Carla (buscando pelo employeeId {{@employee_id_carla_staff}} com token Admin)
+GET http://localhost:3000/librarians/employee/STF001
+Authorization: Bearer {{admin_token_ana}}
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 6: DELETAR (REQUER TOKEN ADMIN)
+### ======================================================================
+
+### Deletar "Bruno Manager" (employeeId {{@employee_id_bruno_manager}}) PELO EMPLOYEE_ID (REQUER TOKEN ADMIN)
+DELETE http://localhost:3000/librarians/employee/{{@employee_id_bruno_manager}}
+Authorization: Bearer {{admin_token_ana}}
+
+### ---
+### Tentar buscar "Bruno Manager" pelo employeeId {{@employee_id_bruno_manager}} (com token Admin - deve dar 404)
+GET http://localhost:3000/librarians/employee/{{@employee_id_bruno_manager}}
+Authorization: Bearer {{admin_token_ana}}
 Accept: application/json
 
 ### ---
-### Deletar "Ana Supervisora" (employeeId {{employee_id_ana}}) PELO EMPLOYEE_ID
-DELETE http://localhost:3000/librarians/employee/SUP001
-
-### ---
-### Tentar buscar "Ana Supervisora" pelo employeeId {{employee_id_ana}} (deve dar 404)
-GET http://localhost:3000/librarians/employee/SUP001
-Accept: application/json
-
-### ---
-### Listar todos os Bibliotecários (só deve ter "Bruno Atendente" atualizado agora)
+### Listar todos os Bibliotecários (com token Admin)
 GET http://localhost:3000/librarians
+Authorization: Bearer {{admin_token_ana}}
 Accept: application/json
+
