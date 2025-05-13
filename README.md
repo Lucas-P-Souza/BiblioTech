@@ -111,6 +111,20 @@ npm run dev
 
 A API estará disponível em `http://localhost:3000` e a documentação Swagger em `http://localhost:3000/api-docs`.
 
+## Diagrama de Entidade-Relacionamento (ERD)
+
+O projeto inclui um diagrama ERD gerado automaticamente a partir do schema do Prisma. O diagrama ajuda a visualizar a estrutura do banco de dados e as relações entre as entidades.
+
+Para gerar ou atualizar o diagrama ERD:
+
+```bash
+npx prisma generate
+```
+
+O diagrama será salvo como `ERD.svg` na raiz do projeto. Você pode visualizá-lo diretamente no navegador ou com qualquer visualizador de SVG.
+
+![BiblioTech ERD](./ERD.svg)
+
 ## Estrutura do Projeto
 
 ```
@@ -128,6 +142,7 @@ BiblioTech/
 ├── .gitignore              # Arquivos ignorados pelo Git
 ├── package.json            # Dependências e scripts do projeto
 ├── tsconfig.json           # Configurações do TypeScript
+├── ERD.svg                 # Diagrama ER gerado pelo prisma-erd-generator
 └── README.md               # Esta documentação
 ```
 

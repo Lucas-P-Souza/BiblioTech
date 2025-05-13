@@ -8,6 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg" // Caminho relativo para salvar o SVG
+  theme    = "forest"     // Tema opcional: forest, dark, neutral, default
+  includeRelationFromFields = true
+}
+
 // --- Enums ---
 enum BookItemStatus {
   Available
