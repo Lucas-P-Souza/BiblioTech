@@ -1,7 +1,5 @@
 # BiblioTech - Sistema de Gerenciamento de Biblioteca
 
-![BiblioTech Logo](https://via.placeholder.com/150x50?text=BiblioTech)
-
 ## Sobre o Projeto
 
 BiblioTech é uma API RESTful desenvolvida como trabalho prático para a disciplina de Desenvolvimento de Projeto de Software (PBLC01) na UNIFEI. O sistema oferece uma solução completa para gerenciamento de bibliotecas, permitindo o controle de acervos, empréstimos, reservas e usuários de forma eficiente e integrada.
