@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import { PrismaClient, LibrarianRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-// A interface AuthenticatedRequest virá do seu auth.middleware.ts
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
-
 
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
-// --- CRIAR um novo bibliotecário ---
+// Cria um novo bibliotecário
+// O primeiro bibliotecário criado recebe automaticamente role Admin
+// Para os demais, só um Admin pode criar novos bibliotecários
 export const createLibrarian = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const { name, email, employeeId, password, role } = req.body;
@@ -62,7 +62,8 @@ export const createLibrarian = async (req: AuthenticatedRequest, res: Response):
     }
 };
 
-// --- LISTAR todos os bibliotecários ---
+// Lista todos os bibliotecários cadastrados
+// Acesso restrito a Admin e Manager
 export const getAllLibrarians = async (req: Request, res: Response): Promise<void> => {
     try {
         const librarians = await prisma.librarian.findMany({
@@ -75,7 +76,8 @@ export const getAllLibrarians = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// --- BUSCAR um bibliotecário pelo ID (UUID) ---
+// Busca um bibliotecário pelo ID (UUID)
+// Acesso restrito a Admin e Manager
 export const getLibrarianById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -94,7 +96,8 @@ export const getLibrarianById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// --- BUSCAR um bibliotecário pelo EMPLOYEE_ID ---
+// Busca um bibliotecário pelo número de identificação funcional
+// Acesso restrito a Admin e Manager
 export const getLibrarianByEmployeeId = async (req: Request, res: Response): Promise<void> => {
     const { employeeId } = req.params;
     try {
@@ -113,8 +116,8 @@ export const getLibrarianByEmployeeId = async (req: Request, res: Response): Pro
     }
 };
 
-// --- ATUALIZAR um bibliotecário pelo ID (UUID) ---
-// Assumindo que a rota que chama esta função é protegida por authorizeRoles(LibrarianRole.Admin)
+// Atualiza os dados de um bibliotecário pelo seu ID
+// Acesso restrito a Admin
 export const updateLibrarianById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { id: targetLibrarianId } = req.params;
     const { name, email, employeeId, password, role } = req.body; // 'role' é o novo role a ser definido
@@ -162,8 +165,8 @@ export const updateLibrarianById = async (req: AuthenticatedRequest, res: Respon
     }
 };
 
-// --- ATUALIZAR um bibliotecário pelo EMPLOYEE_ID ---
-// Assumindo que a rota que chama esta função é protegida por authorizeRoles(LibrarianRole.Admin)
+// Atualiza os dados de um bibliotecário pelo seu número de identificação
+// Acesso restrito a Admin
 export const updateLibrarianByEmployeeId = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { employeeId: paramEmployeeId } = req.params;
     const { name, email, employeeId: newEmployeeId, password, role } = req.body; // 'role' é o novo role
@@ -208,7 +211,8 @@ export const updateLibrarianByEmployeeId = async (req: AuthenticatedRequest, res
     }
 };
 
-// --- DELETAR um bibliotecário pelo ID (UUID) ---
+// Remove um bibliotecário pelo seu ID
+// Acesso restrito a Admin
 export const deleteLibrarianById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -223,7 +227,8 @@ export const deleteLibrarianById = async (req: Request, res: Response): Promise<
     }
 };
 
-// --- DELETAR um bibliotecário pelo EMPLOYEE_ID ---
+// Remove um bibliotecário pelo seu número de identificação
+// Acesso restrito a Admin
 export const deleteLibrarianByEmployeeId = async (req: Request, res: Response): Promise<void> => {
     const { employeeId } = req.params;
     try {
@@ -240,7 +245,8 @@ export const deleteLibrarianByEmployeeId = async (req: Request, res: Response): 
     }
 };
 
-// --- DELETAR TODOS os bibliotecários ---
+// Remove todos os bibliotecários do sistema
+// Operação extremamente perigosa - acesso restrito a Admin
 export const deleteAllLibrarians = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await prisma.librarian.deleteMany({});

@@ -1,195 +1,217 @@
-# BiblioTech - API de Gerenciamento de Biblioteca
+# BiblioTech - Sistema de Gerenciamento de Biblioteca
 
-## Descrição do Projeto
+![BiblioTech Logo](https://via.placeholder.com/150x50?text=BiblioTech)
 
-BiblioTech é uma API RESTful desenvolvida como parte da disciplina PBLC01 - Desenvolvimento de Projeto de Software da Universidade Federal de Itajubá (UNIFEI). O objetivo deste projeto é criar um sistema de gerenciamento para uma biblioteca, permitindo o controle de livros, autores, categorias, editoras, usuários (membros), bibliotecários, empréstimos, multas e reservas.
+## Sobre o Projeto
 
-Esta primeira fase do projeto (visando a Nota 1 / Entrega 5) foca no desenvolvimento do Back-End da API, incluindo a definição do modelo de dados, a lógica de negócios para as operações CRUD (Criar, Ler, Atualizar, Deletar) para as entidades principais, e a implementação de funcionalidades de autenticação (JWT) e documentação (Swagger).
+BiblioTech é uma API RESTful desenvolvida como trabalho prático para a disciplina de Desenvolvimento de Projeto de Software (PBLC01) na UNIFEI. O sistema oferece uma solução completa para gerenciamento de bibliotecas, permitindo o controle de acervos, empréstimos, reservas e usuários de forma eficiente e integrada.
 
-## Funcionalidades Implementadas e Planejadas (Back-End - Entrega 5)
+A API foi construída seguindo princípios REST e boas práticas de desenvolvimento, utilizando Node.js com TypeScript para criar uma base de código robusta e tipada, e PostgreSQL como banco de dados relacional.
 
-A API Back-End para a Entrega 5 (prevista para 14/05) tem como meta fornecer um conjunto completo de operações para o gerenciamento eficiente da biblioteca. O progresso atual e as funcionalidades chave incluem:
+## Funcionalidades
 
-* **Endpoints CRUD (Criar, Ler, Atualizar, Deletar) implementados para as seguintes entidades centrais:**
-  * **Autores (`/authors`):** Gestão completa, incluindo listagem com filtro por nome, busca por ID, criação, atualização (por ID e por nome), e deleção (individual por ID/nome e todos os autores).
-  * **Categorias (`/categories`):** Gestão completa, incluindo listagem com filtro por nome, busca por ID, criação, atualização (por ID e por nome), e deleção (individual por ID/nome e todas as categorias).
-  * **Editoras (`/publishers`):** Gestão completa, incluindo listagem com filtro por nome, busca por ID, criação, atualização (por ID e por nome), e deleção (individual por ID/nome e todas as editoras).
-  * **Bibliotecários (`/librarians`):** Gestão completa com hashing seguro de senhas no cadastro e atualização, listagem, busca (por ID e `employeeId`), atualização (por ID e `employeeId`), e deleção (individual por ID/`employeeId` e todos os bibliotecários).
-  * **Livros (`/books`):** Gestão completa com tratamento de relações para autores, categorias e editoras (permitindo conexão ou criação por nome/ISBN durante o cadastro/atualização do livro), listagem com filtros, busca (por ID e ISBN), atualização (por ID e ISBN), e deleção (individual por ID/ISBN e todos os livros).
-* **Persistência de Dados:** Utilização do PostgreSQL como banco de dados, com o ORM Prisma gerenciando o mapeamento objeto-relacional e as migrações de schema.
-* **Estrutura da API:** Servidor construído de forma modular com Express.js e TypeScript, seguindo boas práticas de organização de controllers e rotas.
-* **Ambiente de Desenvolvimento:** Banco de dados PostgreSQL containerizado com Docker para facilitar a configuração e portabilidade do ambiente.
+### Gerenciamento de Acervo
 
-**Funcionalidades centrais a serem finalizadas para a Entrega 5:**
+- **Livros**: Cadastro completo de livros com informações detalhadas, incluindo título, ISBN, ano de publicação e capa
+- **Autores**: Registro de autores com biografia e associação a múltiplas obras
+- **Categorias**: Organização de livros por categorias temáticas
+- **Editoras**: Cadastro de editoras com informações de contato
 
-* Implementação completa dos endpoints CRUD para as entidades restantes do domínio: `User` (Membros da Biblioteca), `BookItem` (Exemplares Físicos dos Livros), `Loan` (Empréstimos), `Reservation` (Reservas), e `Fine` (Multas).
-* Implementação de um sistema de autenticação e autorização robusto utilizando JSON Web Tokens (JWT) para proteger rotas e gerenciar permissões de acesso à API.
-* Geração de documentação interativa e detalhada da API utilizando Swagger/OpenAPI.
-* Validações de entrada consistentes e tratamento de erros aprimorado em todos os endpoints para garantir a robustez da API.
+### Gestão de Pessoas
 
-## Tecnologias Utilizadas (Back-End)
+- **Bibliotecários**: Controle de acesso com diferentes níveis de permissão (Admin, Manager, Staff)
+- **Membros**: Cadastro de usuários da biblioteca (em desenvolvimento)
 
-* **Node.js:** Ambiente de execução JavaScript (versão LTS recomendada).
-* **TypeScript:** Superset do JavaScript que adiciona tipagem estática.
-* **Express.js:** Framework web para Node.js, utilizado para construir a API RESTful.
-* **Prisma ORM:** ORM para interagir com o banco de dados PostgreSQL.
-* **PostgreSQL:** Sistema de gerenciamento de banco de dados relacional objeto.
-* **Docker & Docker Desktop:** Para containerizar e executar o banco de dados PostgreSQL.
-* **bcryptjs:** Para hashing seguro de senhas.
-* **Nodemon:** Para reiniciar automaticamente o servidor durante o desenvolvimento.
-* **ts-node:** Para executar diretamente os arquivos TypeScript no Node.js.
-* **Git & GitHub:** Para controle de versão e hospedagem do código.
+### Operações de Biblioteca
 
-## Configuração do Ambiente de Desenvolvimento
+- **Empréstimos**: Registro e acompanhamento de empréstimos (em desenvolvimento)
+- **Reservas**: Sistema de reserva de livros (em desenvolvimento)
+- **Multas**: Controle de multas por atraso (em desenvolvimento)
+
+### Segurança e Acessos
+
+- **Autenticação**: Sistema JWT (JSON Web Tokens) para controle seguro de acesso
+- **Autorização**: Controle granular de permissões baseado em papéis (roles)
+
+## Tecnologias Utilizadas
+
+### Back-end
+
+- **Node.js** - Ambiente de execução JavaScript
+- **TypeScript** - Superset tipado do JavaScript
+- **Express** - Framework web para criação da API REST
+- **Prisma ORM** - ORM para interação com o banco de dados
+- **JWT** - Autenticação e autorização com tokens
+- **bcryptjs** - Hashing seguro de senhas
+- **PostgreSQL** - Banco de dados relacional
+- **Swagger/OpenAPI** - Documentação interativa da API
+
+### DevOps
+
+- **Docker** - Containerização do ambiente de desenvolvimento
+- **Git & GitHub** - Controle de versão e colaboração
+
+## Começando
+
+Estas instruções vão ajudar você a obter uma cópia do projeto funcionando na sua máquina local para desenvolvimento e testes.
 
 ### Pré-requisitos
 
-* [Node.js](https://nodejs.org/) (versão LTS instalada)
-* [npm](https://www.npmjs.com/) (instalado com o Node.js)
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando.
-* [Git](https://git-scm.com/)
+- Node.js (v14 ou superior)
+- npm (v6 ou superior)
+- Docker e Docker Compose
+- Git
 
-### Passos para Rodar Localmente
+### Instalação
 
-1. **Clone o Repositório:**
+1. **Clone o repositório**
 
-    ```bash
-    git clone [https://github.com/Lucas-P-Souza/BiblioTech.git](https://github.com/Lucas-P-Souza/BiblioTech.git)
-    cd BiblioTech
-    ```
+```bash
+git clone https://github.com/Lucas-P-Souza/BiblioTech.git
+cd BiblioTech
+```
 
-2. **Instale as Dependências do Projeto:**
-    Execute na raiz do projeto:
+2. **Instale as dependências**
 
-    ```bash
-    npm install
-    ```
+```bash
+npm install
+```
 
-3. **Configure as Variáveis de Ambiente:**
-    * Crie um arquivo chamado `.env` na raiz do projeto.
-    * Adicione a string de conexão com o PostgreSQL. O formato é:
+3. **Configure as variáveis de ambiente**
 
-        ```env
-        DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
-        ```
+Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
 
-    * **Para o contêiner Docker padrão configurado para este projeto, use:**
-        * `USER`: `adminbibliotech`
-        * `PASSWORD`: (A senha definida ao iniciar o contêiner Docker - veja passo 4)
-        * `HOST`: `localhost`
-        * `PORT`: `5432`
-        * `DATABASE_NAME`: `bibliotech_dev`
-    * Exemplo de preenchimento no `.env` (substitua `SUA_SENHA_DEFINIDA_NO_DOCKER`):
+```
+DATABASE_URL="postgresql://adminbibliotech:SUA_SENHA_AQUI@localhost:5432/bibliotech_dev"
+JWT_SECRET="sua_chave_secreta_para_tokens_jwt"
+JWT_EXPIRES_IN="1d"
+```
 
-        ```env
-        DATABASE_URL="postgresql://adminbibliotech:SUA_SENHA_DEFINIDA_NO_DOCKER@localhost:5432/bibliotech_dev"
-        ```
+4. **Inicie o banco de dados PostgreSQL via Docker**
 
-4. **Inicie o Contêiner Docker do PostgreSQL (se ainda não estiver rodando):**
-    No terminal, execute o comando abaixo. Substitua `SUA_SENHA_FORTE_AQUI` por uma senha de sua escolha para o banco de dados (esta será a senha a ser usada no `.env`):
+```bash
+docker run --name bibliotech-db -e POSTGRES_USER=adminbibliotech -e POSTGRES_PASSWORD=SUA_SENHA_AQUI -e POSTGRES_DB=bibliotech_dev -p 5432:5432 -d postgres
+```
 
-    ```bash
-    docker run --name bibliotech-db -e POSTGRES_USER=adminbibliotech -e POSTGRES_PASSWORD=SUA_SENHA_FORTE_AQUI -e POSTGRES_DB=bibliotech_dev -p 5432:5432 -d postgres
-    ```
+5. **Execute as migrações do banco de dados**
 
-    * Para verificar se o contêiner está rodando: `docker ps`.
+```bash
+npx prisma migrate dev
+```
 
-5. **Aplique as Migrações do Prisma:**
-    Este comando criará as tabelas no banco de dados PostgreSQL com base no `schema.prisma`.
+6. **Gere o Prisma Client**
 
-    ```bash
-    npx prisma migrate dev
-    ```
+```bash
+npx prisma generate
+```
 
-    (Confirme `y` se for solicitado).
+7. **Inicie a aplicação em modo de desenvolvimento**
 
-6. **Gere o Prisma Client:**
+```bash
+npm run dev
+```
 
-    ```bash
-    npx prisma generate
-    ```
+A API estará disponível em `http://localhost:3000` e a documentação Swagger em `http://localhost:3000/api-docs`.
 
-7. **Inicie o Servidor de Desenvolvimento:**
+## Estrutura do Projeto
 
-    ```bash
-    npm run dev
-    ```
-
-    O servidor deverá iniciar na porta 3000 (ou a definida em `process.env.PORT`).
+```
+BiblioTech/
+├── prisma/                 # Definições e migrações do banco de dados
+│   ├── schema.prisma       # Modelo de dados do Prisma
+│   └── migrations/         # Histórico de migrações do banco de dados
+├── src/
+│   ├── controllers/        # Controladores da aplicação
+│   ├── middlewares/        # Middlewares do Express (auth, error handling)
+│   ├── models/             # Definições de modelos e schemas do Swagger
+│   ├── routes/             # Definição das rotas da API
+│   └── index.ts            # Ponto de entrada da aplicação
+├── .env                    # Variáveis de ambiente (não versionado)
+├── .gitignore              # Arquivos ignorados pelo Git
+├── package.json            # Dependências e scripts do projeto
+├── tsconfig.json           # Configurações do TypeScript
+└── README.md               # Esta documentação
+```
 
 ## Testando a API
 
-* A API é testada enviando requisições HTTP para os seus endpoints.
-* Recomenda-se o uso da extensão **REST Client** para VS Code.
-* Arquivos de exemplo para o REST Client (formato `.http`) estão localizados na pasta `/http` do projeto.
-* Esses arquivos contêm exemplos de requisições para os diversos endpoints CRUD das entidades da API.
+Você pode testar a API de várias maneiras:
 
-## Estrutura do Projeto (Principais Pastas)
+### Usando o Swagger UI
 
-* `BIBLIOTECH/`
-  * `.env`                   *(Variáveis de ambiente - NÃO versionado)*
-  * `.git/`                  *(Pasta do Git - oculta)*
-  * `.gitignore`             *(Arquivos e pastas ignorados pelo Git)*
-  * `README.md`              *(Esta documentação)*
-  * `package-lock.json`
-  * `package.json`           *(Metadados, dependências e scripts do projeto)*
-  * `tsconfig.json`          *(Configurações do TypeScript)*
-  * `http/`                  *(Arquivos .http para teste com REST Client)*
-    * `authors.http`
-    * `books_by_isbn_test.http`
-    * `categories.http`
-    * `librarians.http`
-    * `publishers.http`
-    * `(outros_arquivos_de_teste.http)`
-  * `prisma/`                *(Configurações, schema e migrações do Prisma)*
-    * `schema.prisma`
-    * `migrations/`
-      * `... (pastas de cada migração)`
-  * `src/`                   *(Código-fonte da aplicação TypeScript)*
-    * `controllers/`         *(Lógica de manipulação de requisições para cada rota)*
-      * `author.controller.ts`
-      * `book.controller.ts`
-      * `category.controller.ts`
-      * `librarian.controller.ts`
-      * `publisher.controller.ts`
-      * `(outros_controllers.ts)`
-    * `domain/`              *(Definições das entidades e enums do núcleo do sistema)*
-      * `entities/`
-        * `Author.ts`
-        * `Book.ts`
-        * `BookItem.ts`
-        * `Category.ts`
-        * `Fine.ts`
-        * `Librarian.ts`
-        * `Loan.ts`
-        * `Publisher.ts`
-        * `Reservation.ts`
-        * `User.ts`
-      * `enums/`
-        * `BookItemStatus.ts`
-        * `FineStatus.ts`
-        * `LibrarianRole.ts`
-        * `LoanStatus.ts`
-        * `ReservationStatus.ts`
-    * `routes/`              *(Definição das rotas (endpoints) da API)*
-      * `author.routes.ts`
-      * `book.routes.ts`
-      * `category.routes.ts`
-      * `librarian.routes.ts`
-      * `publisher.routes.ts`
-      * `(outras_rotas.ts)`
-    * `index.ts`             *(Ponto de entrada e configuração do servidor Express)*
+A maneira mais fácil de testar a API é usando a interface Swagger disponível em `http://localhost:3000/api-docs`. Esta interface permite:
 
-## Autoria
+1. Visualizar todos os endpoints disponíveis
+2. Testar chamadas diretamente do navegador
+3. Ver os modelos de dados e exemplos de requisições/respostas
 
-* **Lucas P. Souza** - Repositório: [BiblioTech no GitHub](https://github.com/Lucas-P-Souza/BiblioTech.git)
+### Passo a passo para testar o fluxo básico
 
-## Informações do Curso
+1. Criar um bibliotecário (primeiro será criado como Admin)
+2. Autenticar com o bibliotecário para obter um token JWT
+3. Autorizar o Swagger UI com o token
+4. Criar categorias, editoras e autores
+5. Cadastrar livros usando os nomes das entidades criadas
+6. Testar as operações de consulta, atualização e remoção
 
-* **Disciplina:** PBLC01 - Desenvolvimento de Projeto de Software
-* **Instituição:** UNIFEI - Universidade Federal de Itajubá
-* **Professores:** Profa. Dra. Bárbara Pimenta Caetano, Prof. Dr. Enzo Seraphim
+### Usando clientes HTTP
 
-## Nota sobre a Utilização de IA
+Você também pode usar ferramentas como:
 
-Durante o desenvolvimento deste projeto, a inteligência artificial **Gemini 2.5 Pro (Google)** foi consultada como uma ferramenta de auxílio. Sua contribuição incluiu assistência na formulação e revisão de comentários no código para melhorar a clareza, além de suporte na depuração de erros e na elaboração de explicações conceituais.
+- **VS Code REST Client**: Arquivos `.http` estão disponíveis no diretório `http/`
+- **Postman** ou **Insomnia**: Importando a coleção do Swagger (disponível para download na UI)
+- **cURL**: Para chamadas via linha de comando
+
+## Documentação da API
+
+A documentação completa da API está disponível através do Swagger UI em `http://localhost:3000/api-docs`.
+
+A documentação inclui:
+- Todos os endpoints disponíveis
+- Parâmetros necessários
+- Formatos de requisição e resposta
+- Códigos de status HTTP
+- Exemplos de uso
+
+## Permissões e Roles
+
+O sistema usa três níveis de permissão para bibliotecários:
+
+1. **Staff** - Acesso básico para operações diárias
+2. **Manager** - Acesso intermediário, pode gerenciar categorias, autores e livros
+3. **Admin** - Acesso completo ao sistema, incluindo gestão de bibliotecários
+
+O primeiro bibliotecário cadastrado é automaticamente definido como Admin.
+
+## Regras de Negócio
+
+- ISBN de livros deve ser único no sistema
+- O primeiro bibliotecário é criado sem autenticação e como Admin
+- Nomes de autores, categorias e editoras são únicos
+- Operações de exclusão verificam dependências antes de remover registros
+
+## Em Desenvolvimento
+
+Recursos que estão sendo desenvolvidos para as próximas versões:
+
+- Gestão de exemplares físicos de livros (BookItems)
+- Sistema de empréstimos e devoluções
+- Reserva de livros
+- Controle de multas por atraso
+- Painel administrativo (front-end)
+- Geração de relatórios
+- Exportação de dados
+
+## Autor
+
+- **Lucas P. Souza** - [GitHub](https://github.com/Lucas-P-Souza)
+
+## Licença
+
+Este projeto está sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## Agradecimentos
+
+- UNIFEI e aos professores da disciplina PBLC01
+- Colegas que contribuíram com ideias e feedback
+- Comunidades de Node.js, TypeScript e Prisma pelos recursos de aprendizado

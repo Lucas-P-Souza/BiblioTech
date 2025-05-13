@@ -3,9 +3,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// LISTAR todas as categorias.
-// Permite filtrar por nome se o query param 'name' for fornecido (ex: /categories?name=Ficção)
-// Esta rota é PÚBLICA.
+// Retorna todas as categorias cadastradas
+// Permite filtrar por nome via query parameter (busca parcial, case-insensitive)
+// Rota pública
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query; // Extrai o parâmetro 'name' da query string.
@@ -32,10 +32,9 @@ export const getAllCategories = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// BUSCAR uma categoria específica pelo NOME.
-// O nome é fornecido como parâmetro na rota (ex: /categories/by-name/Ficção%20Científica).
-// Esta rota é PÚBLICA.
-// Requer que 'name' seja @unique no schema para Category.
+// Busca uma categoria pelo seu nome exato
+// Requer que o campo 'name' seja único na tabela de categorias
+// Rota pública
 export const getCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const categoryName = req.params.name; // Extrai o nome dos parâmetros da rota.
     try {
@@ -54,8 +53,8 @@ export const getCategoryByName = async (req: Request, res: Response): Promise<vo
     }
 };
 
-// CRIAR uma nova categoria.
-// Esta rota é PRIVADA (requer autenticação JWT).
+// Cria uma nova categoria no sistema
+// Requer autenticação (JWT)
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, description } = req.body;
@@ -79,10 +78,8 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// ATUALIZAR uma categoria existente, identificada pelo NOME ATUAL.
-// O novo nome e/ou descrição são fornecidos no corpo da requisição.
-// Esta rota é PRIVADA.
-// Requer que 'name' seja @unique no schema.
+// Atualiza os dados de uma categoria pelo seu nome
+// Requer autenticação (JWT) e que o campo 'name' seja único
 export const updateCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const currentName = req.params.name; // Nome atual da categoria, vindo da URL.
     const { name: newName, description } = req.body; // Novos dados.
@@ -122,9 +119,8 @@ export const updateCategoryByName = async (req: Request, res: Response): Promise
     }
 };
 
-// DELETAR uma categoria específica pelo NOME.
-// Esta rota é PRIVADA.
-// Requer que 'name' seja @unique no schema.
+// Remove uma categoria pelo seu nome
+// Requer autenticação (JWT) e que o campo 'name' seja único
 export const deleteCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const categoryName = req.params.name; // Nome da categoria a ser deletada.
     try {
@@ -152,8 +148,10 @@ export const deleteCategoryByName = async (req: Request, res: Response): Promise
     }
 };
 
-// DELETAR TODAS as categorias.
-// Esta rota é PRIVADA e idealmente restrita a roles específicos (ex: Admin).
+// Remove todas as categorias do sistema
+// Operação perigosa - deve ser restrita por role
+// Categorias associadas a livros podem não ser removidas,
+// dependendo das restrições configuradas no banco de dados
 export const deleteAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await prisma.category.deleteMany({});

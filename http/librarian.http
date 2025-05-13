@@ -12,8 +12,8 @@
 ### ======================================================================
 
 ### PASSO 0: Limpar todos os Bibliotecários (OPCIONAL - REQUER TOKEN ADMIN SE JÁ EXISTIR UM)
-# DELETE http://localhost:3000/librarians
-# Authorization: Bearer SEU_TOKEN_ADMIN_DE_SESSAO_ANTERIOR_AQUI
+DELETE http://localhost:3000/librarians
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWJyYXJpYW5JZCI6ImRlZTEwZjNjLWI5MTgtNGE0MC1hNmEyLThlMTg5ZjU5MzY1MSIsImVtYWlsIjoiYW5hLmZpcnN0YWRtaW5AYmlibGlvdGVjaC5jb20iLCJyb2xlIjoiQWRtaW4iLCJuYW1lIjoiQW5hIEFkbWluIChQcmltZWlyYSkiLCJpYXQiOjE3NDcwNzQyMTksImV4cCI6MTc0NzA5MjIxOX0.9bUCaAs-yp0T6ZdHfxYz24MADb4ofcf0nAR3l_PAdKk
 
 
 ### ======================================================================

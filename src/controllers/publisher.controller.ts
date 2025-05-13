@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-// Instância do Prisma Client para interagir com o banco de dados.
 const prisma = new PrismaClient();
 
-// Busca todas as editoras. Permite filtrar por nome via query parameter '?name=...'.
-// A busca por nome é case-insensitive e procura por nomes que contenham o termo.
-// Esta rota é PÚBLICA.
+// Retorna todas as editoras cadastradas
+// Permite filtrar por nome via query parameter (busca parcial, case-insensitive)
 export const getAllPublishers = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query; // Extrai o parâmetro 'name' da query string.
@@ -31,9 +29,8 @@ export const getAllPublishers = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Busca uma editora específica pelo seu NOME.
-// O nome é fornecido como parâmetro na rota.
-// Esta rota é PÚBLICA. Requer que 'name' seja @unique no schema.
+// Busca uma editora pelo seu nome exato
+// Requer que o campo 'name' seja único na tabela de editoras
 export const getPublisherByName = async (req: Request, res: Response): Promise<void> => {
     const publisherName = req.params.name; // Extrai o nome dos parâmetros da rota.
     try {
@@ -52,8 +49,7 @@ export const getPublisherByName = async (req: Request, res: Response): Promise<v
     }
 };
 
-// Busca uma editora específica pelo seu ID (UUID).
-// Esta rota é PÚBLICA.
+// Busca uma editora pelo seu ID (UUID)
 export const getPublisherById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Extrai o 'id' dos parâmetros da rota.
     try {
@@ -72,8 +68,8 @@ export const getPublisherById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Cria uma nova editora.
-// Esta rota é PRIVADA (requer autenticação JWT).
+// Cria uma nova editora no sistema
+// Requer autenticação (JWT)
 export const createPublisher = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, address, contactInfo } = req.body;
@@ -98,8 +94,8 @@ export const createPublisher = async (req: Request, res: Response): Promise<void
     }
 };
 
-// Atualiza uma editora existente, identificada pelo seu ID (UUID).
-// Esta rota é PRIVADA.
+// Atualiza os dados de uma editora pelo seu ID
+// Requer autenticação (JWT)
 export const updatePublisherById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // ID da editora a ser atualizada.
     const { name, address, contactInfo } = req.body; // Novos dados.
@@ -140,8 +136,8 @@ export const updatePublisherById = async (req: Request, res: Response): Promise<
     }
 };
 
-// Atualiza uma editora existente, identificada pelo seu NOME ATUAL.
-// Esta rota é PRIVADA. Requer que 'name' seja @unique no schema.
+// Atualiza os dados de uma editora pelo seu nome
+// Requer autenticação (JWT) e que o campo 'name' seja único
 export const updatePublisherByName = async (req: Request, res: Response): Promise<void> => {
     const currentName = req.params.name; // Nome atual da editora, vindo da URL.
     const { name: newName, address, contactInfo } = req.body; // Novos dados.
@@ -182,8 +178,8 @@ export const updatePublisherByName = async (req: Request, res: Response): Promis
     }
 };
 
-// Deleta uma editora específica pelo seu NOME.
-// Esta rota é PRIVADA. Requer que 'name' seja @unique no schema.
+// Remove uma editora pelo seu nome
+// Requer autenticação (JWT) e que o campo 'name' seja único
 export const deletePublisherByName = async (req: Request, res: Response): Promise<void> => {
     const publisherName = req.params.name; // Nome da editora a ser deletada.
     try {
@@ -211,8 +207,8 @@ export const deletePublisherByName = async (req: Request, res: Response): Promis
     }
 };
 
-// Deleta uma editora específica pelo seu ID (UUID).
-// Esta rota é PRIVADA.
+// Remove uma editora pelo seu ID
+// Requer autenticação (JWT)
 export const deletePublisherById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // ID da editora a ser deletada.
     try {
@@ -236,8 +232,10 @@ export const deletePublisherById = async (req: Request, res: Response): Promise<
     }
 };
 
-// Deleta TODAS as editoras.
-// Esta rota é PRIVADA e idealmente restrita a roles específicos (ex: Admin).
+// Remove todas as editoras do sistema
+// Operação perigosa - deve ser restrita por role
+// Editoras associadas a livros podem não ser removidas,
+// dependendo das restrições configuradas no banco de dados
 export const deleteAllPublishers = async (req: Request, res: Response): Promise<void> => {
     try {
         // CUIDADO: Se editoras estiverem ligadas a livros e a constraint for restritiva,

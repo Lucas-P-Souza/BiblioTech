@@ -3,21 +3,23 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// --- CRIAR um novo livro (usando nomes para relações) ---
-// Protegido por JWT.
+// Cria um novo livro no sistema
+// Permite criar usando nomes para as relações (em vez de IDs)
+// Rota protegida por JWT
 export const createBook = async (req: Request, res: Response): Promise<void> => {
     try {
         const {
             title,
             isbn,
-            publicationYear: publicationYearInput,
+            publishYear,
+            coverImage,
             publisherName,
             authorNames,
             categoryNames
         } = req.body;
 
         // Validações de campos obrigatórios.
-        if (!title || !isbn || !publisherName || publicationYearInput === undefined) {
+        if (!title || !isbn || !publisherName || publishYear === undefined) {
             res.status(400).json({ message: 'Título, ISBN, Nome da Editora e Ano de Publicação são obrigatórios.' });
             return;
         }
@@ -30,8 +32,11 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        const parsedPublicationYear = parseInt(String(publicationYearInput), 10);
-        if (isNaN(parsedPublicationYear)) {
+        const parsedPublishYear = typeof publishYear === 'string' 
+            ? parseInt(publishYear, 10)
+            : publishYear;
+            
+        if (isNaN(parsedPublishYear)) {
             res.status(400).json({ message: 'Ano de Publicação inválido. Deve ser um número.' });
             return;
         }
@@ -39,11 +44,26 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         const newBook = await prisma.book.create({
             data: {
                 title,
-                isbn, // ISBN é @unique e será usado para identificar unicamente se necessário
-                publicationYear: parsedPublicationYear,
-                publisher: { connectOrCreate: { where: { name: publisherName }, create: { name: publisherName } } },
-                authors: { connectOrCreate: authorNames.map((name: string) => ({ where: { name }, create: { name } })) },
-                categories: { connectOrCreate: categoryNames.map((name: string) => ({ where: { name }, create: { name } })) },
+                isbn,
+                publicationYear: parsedPublishYear, // Changed from publishYear to publicationYear
+                publisher: { 
+                    connectOrCreate: { 
+                        where: { name: publisherName }, 
+                        create: { name: publisherName } 
+                    } 
+                },
+                authors: { 
+                    connectOrCreate: authorNames.map((name: string) => ({ 
+                        where: { name }, 
+                        create: { name } 
+                    })) 
+                },
+                categories: { 
+                    connectOrCreate: categoryNames.map((name: string) => ({ 
+                        where: { name }, 
+                        create: { name } 
+                    })) 
+                },
             },
             include: { authors: true, categories: true, publisher: true }
         });
@@ -52,14 +72,7 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         console.error("Controller Error - createBook:", error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
             if (error.code === 'P2002') {
-                // Este erro agora seria mais provável para ISBN duplicado,
-                // ou se um dos nomes em connectOrCreate (Author, Category, Publisher) não for @unique
-                // e o Prisma tentar criar uma duplicata.
-                res.status(409).json({ message: 'Já existe um livro com este ISBN, ou um nome de autor/categoria/editora duplicado onde deveria ser único.' });
-                return;
-            }
-            if (error.code === 'P2025') {
-                res.status(400).json({ message: 'Editora, autor ou categoria com nome fornecido não pôde ser conectado ou criado.' });
+                res.status(409).json({ message: 'Já existe um livro com este ISBN.' });
                 return;
             }
         }
@@ -67,9 +80,9 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-// --- LISTAR todos os livros ---
-// Permite filtros por título (contains), isbn (contains), nome do autor, etc.
-// Rota PÚBLICA.
+// Lista todos os livros cadastrados
+// Permite filtrar por título, ISBN, autor, categoria ou editora via query params
+// Rota pública
 export const getAllBooks = async (req: Request, res: Response): Promise<void> => {
     try {
         const { title, isbn, authorName, categoryName, publisherName } = req.query;
@@ -98,8 +111,8 @@ export const getAllBooks = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-// --- BUSCAR um livro pelo ID (UUID) ---
-// Rota PÚBLICA.
+// Busca um livro específico pelo ID (UUID)
+// Rota pública
 export const getBookById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -117,8 +130,9 @@ export const getBookById = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-// --- BUSCAR livros por TÍTULO EXATO (retorna um array) ---
-// Rota PÚBLICA.
+// Busca livros com título exato
+// Retorna um array de livros (vazio se nenhum for encontrado)
+// Rota pública
 export const getBooksByExactTitle = async (req: Request, res: Response): Promise<void> => {
     const bookTitle = req.params.title;
     try {
@@ -135,8 +149,8 @@ export const getBooksByExactTitle = async (req: Request, res: Response): Promise
     }
 };
 
-// --- BUSCAR um livro pelo ISBN (que é único) ---
-// Rota PÚBLICA.
+// Busca um livro pelo ISBN (identificador único)
+// Rota pública
 export const getBookByIsbn = async (req: Request, res: Response): Promise<void> => {
     const { isbn } = req.params;
     try {
@@ -154,9 +168,8 @@ export const getBookByIsbn = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-
-// --- ATUALIZAR um livro pelo ID (UUID) ---
-// Rota PRIVADA.
+// Atualiza os dados de um livro pelo seu ID
+// Rota protegida por JWT
 export const updateBookById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { title, isbn, publicationYear: publicationYearInput, publisherName, authorNames, categoryNames } = req.body;
@@ -172,7 +185,7 @@ export const updateBookById = async (req: Request, res: Response): Promise<void>
         if (publicationYearInput !== undefined) {
             const parsedYear = parseInt(String(publicationYearInput), 10);
             if (isNaN(parsedYear)) { res.status(400).json({ message: 'Ano de publicação inválido.' }); return; }
-            dataToUpdate.publicationYear = parsedYear;
+            dataToUpdate.publicationYear = parsedYear; // Changed to publicationYear
         }
         if (publisherName !== undefined) dataToUpdate.publisher = { connectOrCreate: { where: { name: publisherName }, create: { name: publisherName } } };
         if (authorNames !== undefined) {
@@ -196,8 +209,8 @@ export const updateBookById = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// --- ATUALIZAR um livro pelo ISBN ---
-// Rota PRIVADA.
+// Atualiza os dados de um livro pelo seu ISBN
+// Rota protegida por JWT
 export const updateBookByIsbn = async (req: Request, res: Response): Promise<void> => {
     const { isbn: isbnParam } = req.params;
     const { title, isbn: newIsbn, publicationYear: publicationYearInput, publisherName, authorNames, categoryNames } = req.body;
@@ -214,7 +227,7 @@ export const updateBookByIsbn = async (req: Request, res: Response): Promise<voi
         if (publicationYearInput !== undefined) {
             const parsedYear = parseInt(String(publicationYearInput), 10);
             if (isNaN(parsedYear)) { res.status(400).json({ message: 'Ano de publicação inválido.' }); return; }
-            dataToUpdate.publicationYear = parsedYear;
+            dataToUpdate.publicationYear = parsedYear; // Changed to publicationYear
         }
         if (publisherName !== undefined) dataToUpdate.publisher = { connectOrCreate: { where: { name: publisherName }, create: { name: publisherName } } };
         if (authorNames !== undefined) {
@@ -242,9 +255,8 @@ export const updateBookByIsbn = async (req: Request, res: Response): Promise<voi
     }
 };
 
-
-// --- DELETAR um livro pelo ID (UUID) ---
-// Rota PRIVADA.
+// Remove um livro pelo seu ID
+// Rota protegida por JWT
 export const deleteBookById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -260,8 +272,8 @@ export const deleteBookById = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// --- DELETAR um livro pelo ISBN ---
-// Rota PRIVADA.
+// Remove um livro pelo seu ISBN
+// Rota protegida por JWT
 export const deleteBookByIsbn = async (req: Request, res: Response): Promise<void> => {
     const { isbn } = req.params;
     try {
@@ -281,8 +293,8 @@ export const deleteBookByIsbn = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// --- DELETAR TODOS os livros ---
-// Rota PRIVADA e restrita a roles.
+// Remove todos os livros do sistema
+// Operação perigosa - restrita a Admin e Manager
 export const deleteAllBooks = async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await prisma.book.deleteMany({});
@@ -293,6 +305,5 @@ export const deleteAllBooks = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// As funções updateBookByTitle e deleteBookByTitle foram removidas
-// porque o título do livro não é mais considerado um identificador único para essas operações.
-// A busca por título (getBooksByExactTitle) retorna uma lista.
+// Nota: As operações por título foram removidas porque o título 
+// não é considerado um identificador único seguro para edição/exclusão

@@ -6,11 +6,10 @@ import jwt from 'jsonwebtoken';
 const prisma = new PrismaClient();
 
 /**
- * Converte uma string de tempo (ex: "1h", "7d", "30m", "3600s") para segundos.
- * Retorna undefined se o formato for inválido ou não suportado.
- * Para uma conversão mais robusta e completa, a biblioteca 'ms' seria ideal.
- * @param timeStr String de tempo ou número de segundos.
- * @returns Número de segundos ou undefined.
+ * Converte uma string de tempo para segundos
+ * Aceita formatos como "1h", "7d", "30m", "3600s" ou número direto
+ * @param timeStr String ou número representando o tempo
+ * @return Número em segundos ou undefined se o formato for inválido
  */
 const convertTimeToSeconds = (timeStr: string | number | undefined): number | undefined => {
     if (timeStr === undefined) return undefined;
@@ -42,7 +41,8 @@ const convertTimeToSeconds = (timeStr: string | number | undefined): number | un
     return undefined;
 };
 
-// Controller para o login do Bibliotecário
+// Realiza a autenticação do bibliotecário e gera token JWT
+// Verifica credenciais e retorna informações necessárias para a sessão
 export const loginLibrarian = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;

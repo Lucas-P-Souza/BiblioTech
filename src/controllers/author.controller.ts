@@ -3,7 +3,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Busca todos os autores, permitindo filtrar por nome via query param.
+// Retorna todos os autores cadastrados
+// Permite filtrar por nome via parâmetro de consulta
 export const getAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query;
@@ -28,7 +29,7 @@ export const getAllAuthors = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Busca um autor específico pelo seu ID (UUID).
+// Busca um autor específico pelo seu ID (UUID)
 export const getAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -47,7 +48,27 @@ export const getAuthorById = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Cria um novo autor.
+// Busca um autor pelo nome exato
+// Requer que o campo 'name' seja único na tabela de autores
+export const getAuthorByName = async (req: Request, res: Response): Promise<void> => {
+    const authorName = req.params.name;
+    try {
+        const author = await prisma.author.findUnique({
+            where: { name: authorName },
+        });
+
+        if (!author) {
+            res.status(404).json({ message: 'Autor não encontrado (Nome).' });
+            return;
+        }
+        res.status(200).json(author);
+    } catch (error: unknown) {
+        console.error(`Controller Error - getAuthorByName (Nome: ${authorName}):`, error);
+        res.status(500).json({ message: 'Erro ao buscar autor por nome.' });
+    }
+};
+
+// Cria um novo autor no sistema
 export const createAuthor = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, biography } = req.body;
@@ -71,7 +92,7 @@ export const createAuthor = async (req: Request, res: Response): Promise<void> =
     }
 };
 
-// ATUALIZA um autor existente pelo seu ID (UUID).
+// Atualiza os dados de um autor pelo seu ID
 export const updateAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name, biography } = req.body;
@@ -107,7 +128,8 @@ export const updateAuthorById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// ATUALIZA um autor existente pelo seu NOME.
+// Atualiza os dados de um autor pelo seu nome
+// Requer que o campo 'name' seja único na tabela de autores
 export const updateAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const currentName = req.params.name;
     const { name: newName, biography } = req.body;
@@ -142,7 +164,8 @@ export const updateAuthorByName = async (req: Request, res: Response): Promise<v
     }
 };
 
-// Deleta um autor específico pelo seu nome.
+// Remove um autor pelo seu nome
+// Requer que o campo 'name' seja único na tabela de autores
 export const deleteAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const authorName = req.params.name;
     try {
@@ -161,7 +184,7 @@ export const deleteAuthorByName = async (req: Request, res: Response): Promise<v
     }
 };
 
-// Deleta um autor específico pelo seu ID (UUID).
+// Remove um autor pelo seu ID
 export const deleteAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -181,7 +204,9 @@ export const deleteAuthorById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Deleta TODOS os autores.
+// Remove todos os autores do sistema
+// Observação: autores associados a livros podem não ser removidos,
+// dependendo da configuração de restrições do banco de dados
 export const deleteAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await prisma.author.deleteMany({});
