@@ -1,27 +1,13 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import authorRepository from '../repositories/author.repository';
 
 // Retorna todos os autores cadastrados
 // Permite filtrar por nome via parâmetro de consulta
 export const getAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query;
-        let authors;
-
-        if (name && typeof name === 'string' && name.trim() !== '') {
-            authors = await prisma.author.findMany({
-                where: {
-                    name: {
-                        contains: name,
-                        mode: 'insensitive',
-                    },
-                },
-            });
-        } else {
-            authors = await prisma.author.findMany();
-        }
+        const nameFilter = name && typeof name === 'string' ? name : undefined;
+        const authors = await authorRepository.findAll(nameFilter);
         res.status(200).json(authors);
     } catch (error: unknown) {
         console.error("Controller Error - getAllAuthors:", error);
@@ -33,9 +19,7 @@ export const getAllAuthors = async (req: Request, res: Response): Promise<void> 
 export const getAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        const author = await prisma.author.findUnique({
-            where: { id },
-        });
+        const author = await authorRepository.findById(id);
 
         if (!author) {
             res.status(404).json({ message: 'Autor não encontrado (ID).' });
@@ -53,9 +37,7 @@ export const getAuthorById = async (req: Request, res: Response): Promise<void> 
 export const getAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const authorName = req.params.name;
     try {
-        const author = await prisma.author.findUnique({
-            where: { name: authorName },
-        });
+        const author = await authorRepository.findByName(authorName);
 
         if (!author) {
             res.status(404).json({ message: 'Autor não encontrado (Nome).' });
@@ -78,9 +60,7 @@ export const createAuthor = async (req: Request, res: Response): Promise<void> =
             return;
         }
 
-        const newAuthor = await prisma.author.create({
-            data: { name, biography },
-        });
+        const newAuthor = await authorRepository.create({ name, biography });
         res.status(201).json(newAuthor);
     } catch (error: unknown) {
         console.error("Controller Error - createAuthor:", error);
@@ -109,10 +89,8 @@ export const updateAuthorById = async (req: Request, res: Response): Promise<voi
         const dataToUpdate: { name?: string; biography?: string } = {};
         if (name !== undefined) dataToUpdate.name = name;
         if (biography !== undefined) dataToUpdate.biography = biography;
-        const updatedAuthor = await prisma.author.update({
-            where: { id },
-            data: dataToUpdate,
-        });
+        
+        const updatedAuthor = await authorRepository.updateById(id, dataToUpdate);
         res.status(200).json(updatedAuthor);
     } catch (error: unknown) {
         console.error(`Controller Error - updateAuthorById (ID: ${id}):`, error);
@@ -145,10 +123,8 @@ export const updateAuthorByName = async (req: Request, res: Response): Promise<v
         const dataToUpdate: { name?: string; biography?: string } = {};
         if (newName !== undefined) dataToUpdate.name = newName;
         if (biography !== undefined) dataToUpdate.biography = biography;
-        const updatedAuthor = await prisma.author.update({
-            where: { name: currentName },
-            data: dataToUpdate,
-        });
+        
+        const updatedAuthor = await authorRepository.updateByName(currentName, dataToUpdate);
         res.status(200).json(updatedAuthor);
     } catch (error: unknown) {
         console.error(`Controller Error - updateAuthorByName (Nome Atual: ${currentName}):`, error);
@@ -169,16 +145,19 @@ export const updateAuthorByName = async (req: Request, res: Response): Promise<v
 export const deleteAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const authorName = req.params.name;
     try {
-        const authorExists = await prisma.author.findUnique({ where: { name: authorName } });
+        const authorExists = await authorRepository.findByName(authorName);
         if (!authorExists) {
-            res.status(404).json({ message: 'Autor não encontrado para deleção (nome).' }); return;
+            res.status(404).json({ message: 'Autor não encontrado para deleção (nome).' }); 
+            return;
         }
-        await prisma.author.delete({ where: { name: authorName } });
+        
+        await authorRepository.deleteByName(authorName);
         res.status(204).send();
     } catch (error: unknown) {
         console.error(`Controller Error - deleteAuthorByName (Name: ${authorName}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2003') {
-            res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); return;
+            res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); 
+            return;
         }
         res.status(500).json({ message: 'Erro ao deletar autor por nome.' });
     }
@@ -188,16 +167,18 @@ export const deleteAuthorByName = async (req: Request, res: Response): Promise<v
 export const deleteAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        await prisma.author.delete({ where: { id } });
+        await authorRepository.deleteById(id);
         res.status(204).send();
     } catch (error: unknown) {
         console.error(`Controller Error - deleteAuthorById (ID: ${id}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
             if (error.code === 'P2025') {
-                res.status(404).json({ message: 'Autor não encontrado para deleção (ID).' }); return;
+                res.status(404).json({ message: 'Autor não encontrado para deleção (ID).' }); 
+                return;
             }
             if (error.code === 'P2003') {
-                res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); return;
+                res.status(409).json({ message: 'Não é possível deletar o autor, pois ele está associado a livros.' }); 
+                return;
             }
         }
         res.status(500).json({ message: 'Erro ao deletar autor por ID.' });
@@ -209,7 +190,7 @@ export const deleteAuthorById = async (req: Request, res: Response): Promise<voi
 // dependendo da configuração de restrições do banco de dados
 export const deleteAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
-        const deleteResult = await prisma.author.deleteMany({});
+        const deleteResult = await authorRepository.deleteAll();
         res.status(200).json({
             message: 'Todos os autores foram deletados (que não estavam em uso por livros, dependendo das constraints).',
             count: deleteResult.count

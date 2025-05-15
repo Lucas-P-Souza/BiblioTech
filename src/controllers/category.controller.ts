@@ -1,30 +1,15 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import categoryRepository from '../repositories/category.repository';
 
 // Retorna todas as categorias cadastradas
 // Permite filtrar por nome via query parameter (busca parcial, case-insensitive)
 // Rota pública
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name } = req.query; // Extrai o parâmetro 'name' da query string.
-        let categories;
-
-        if (name && typeof name === 'string' && name.trim() !== '') {
-            // Busca categorias contendo o termo (case-insensitive).
-            categories = await prisma.category.findMany({
-                where: {
-                    name: {
-                        contains: name,
-                        mode: 'insensitive',
-                    },
-                },
-            });
-        } else {
-            // Busca todas as categorias se nenhum nome for fornecido.
-            categories = await prisma.category.findMany();
-        }
+        const { name } = req.query;
+        const nameFilter = name && typeof name === 'string' ? name : undefined;
+        
+        const categories = await categoryRepository.findAll(nameFilter);
         res.status(200).json(categories);
     } catch (error: unknown) {
         console.error("Controller Error - getAllCategories:", error);
@@ -36,11 +21,9 @@ export const getAllCategories = async (req: Request, res: Response): Promise<voi
 // Requer que o campo 'name' seja único na tabela de categorias
 // Rota pública
 export const getCategoryByName = async (req: Request, res: Response): Promise<void> => {
-    const categoryName = req.params.name; // Extrai o nome dos parâmetros da rota.
+    const categoryName = req.params.name;
     try {
-        const category = await prisma.category.findUnique({
-            where: { name: categoryName }, // Busca pelo nome (que deve ser único).
-        });
+        const category = await categoryRepository.findByName(categoryName);
 
         if (!category) {
             res.status(404).json({ message: 'Categoria não encontrada com o nome fornecido.' });
@@ -64,14 +47,12 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        const newCategory = await prisma.category.create({
-            data: { name, description },
-        });
-        res.status(201).json(newCategory); // 201: Created
+        const newCategory = await categoryRepository.create({ name, description });
+        res.status(201).json(newCategory);
     } catch (error: unknown) {
         console.error("Controller Error - createCategory:", error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2002') {
-            res.status(409).json({ message: 'Já existe uma categoria com este nome.' }); // 409: Conflict
+            res.status(409).json({ message: 'Já existe uma categoria com este nome.' });
             return;
         }
         res.status(500).json({ message: 'Erro ao criar categoria.' });
@@ -81,14 +62,14 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
 // Atualiza os dados de uma categoria pelo seu nome
 // Requer autenticação (JWT) e que o campo 'name' seja único
 export const updateCategoryByName = async (req: Request, res: Response): Promise<void> => {
-    const currentName = req.params.name; // Nome atual da categoria, vindo da URL.
-    const { name: newName, description } = req.body; // Novos dados.
+    const currentName = req.params.name;
+    const { name: newName, description } = req.body;
 
     if (newName === undefined && description === undefined) {
         res.status(400).json({ message: 'Nenhum dado fornecido para atualização.' });
         return;
     }
-    if (newName === '') { // Se um novo nome for fornecido, não pode ser vazio.
+    if (newName === '') {
         res.status(400).json({ message: 'O novo nome não pode ser vazio para atualização.' });
         return;
     }
@@ -98,19 +79,16 @@ export const updateCategoryByName = async (req: Request, res: Response): Promise
         if (newName !== undefined) dataToUpdate.name = newName;
         if (description !== undefined) dataToUpdate.description = description;
 
-        const updatedCategory = await prisma.category.update({
-            where: { name: currentName }, // Busca pelo nome atual para realizar a atualização.
-            data: dataToUpdate,
-        });
+        const updatedCategory = await categoryRepository.updateByName(currentName, dataToUpdate);
         res.status(200).json(updatedCategory);
     } catch (error: unknown) {
         console.error(`Controller Error - updateCategoryByName (Nome Atual: ${currentName}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
-            if (error.code === 'P2025') { // Categoria com 'currentName' não encontrada.
+            if (error.code === 'P2025') {
                 res.status(404).json({ message: 'Categoria não encontrada para atualização (nome).' });
                 return;
             }
-            if (error.code === 'P2002') { // Violação de constraint única (se o 'newName' já existir).
+            if (error.code === 'P2002') {
                 res.status(409).json({ message: 'Já existe uma categoria com o novo nome fornecido.' });
                 return;
             }
@@ -122,25 +100,20 @@ export const updateCategoryByName = async (req: Request, res: Response): Promise
 // Remove uma categoria pelo seu nome
 // Requer autenticação (JWT) e que o campo 'name' seja único
 export const deleteCategoryByName = async (req: Request, res: Response): Promise<void> => {
-    const categoryName = req.params.name; // Nome da categoria a ser deletada.
+    const categoryName = req.params.name;
     try {
-        const categoryExists = await prisma.category.findUnique({
-            where: { name: categoryName },
-        });
+        const categoryExists = await categoryRepository.findByName(categoryName);
 
         if (!categoryExists) {
             res.status(404).json({ message: 'Categoria não encontrada para deleção (nome).' });
             return;
         }
 
-        await prisma.category.delete({
-            where: { name: categoryName },
-        });
-        res.status(204).send(); // 204: No Content
+        await categoryRepository.deleteByName(categoryName);
+        res.status(204).send();
     } catch (error: unknown) {
         console.error(`Controller Error - deleteCategoryByName (Name: ${categoryName}):`, error);
         if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && error.code === 'P2003') {
-            // Erro se a categoria estiver associada a livros e a deleção for restrita.
             res.status(409).json({ message: 'Não é possível deletar a categoria, pois ela está associada a um ou mais livros.' });
             return;
         }
@@ -154,7 +127,7 @@ export const deleteCategoryByName = async (req: Request, res: Response): Promise
 // dependendo das restrições configuradas no banco de dados
 export const deleteAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
-        const deleteResult = await prisma.category.deleteMany({});
+        const deleteResult = await categoryRepository.deleteAll();
         res.status(200).json({
             message: 'Todas as categorias foram deletadas (que não estavam em uso por livros, dependendo das constraints).',
             count: deleteResult.count

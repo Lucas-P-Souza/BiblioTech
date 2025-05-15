@@ -292,7 +292,7 @@
  *           type: string
  *           nullable: true
  *           description: Descrição ou sinopse do livro
- *         publishYear:  // Keep this as publishYear in the API interface
+ *         publishYear:
  *           type: integer
  *           description: Ano de publicação do livro
  *         coverImage:
@@ -491,10 +491,58 @@
  *           description: Mensagem de erro descritiva
  *       example:
  *         message: "Ocorreu um erro ao processar a solicitação."
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *       description: Forneça o token JWT para autenticar-se e acessar rotas protegidas.
+ *
+ *     LoginCredentials:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email do bibliotecário
+ *         password:
+ *           type: string
+ *           format: password
+ *           description: Senha do bibliotecário
+ *       example:
+ *         email: "admin@biblioteca.org"
+ *         password: "senha123"
+ *
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Mensagem informativa sobre o resultado do login
+ *         token:
+ *           type: string
+ *           description: Token JWT para autenticação nas rotas protegidas
+ *         librarian:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: uuid
+ *               description: ID do bibliotecário
+ *             name:
+ *               type: string
+ *               description: Nome do bibliotecário
+ *             email:
+ *               type: string
+ *               format: email
+ *               description: Email do bibliotecário
+ *             role:
+ *               type: string
+ *               enum: [Admin, Manager, Staff]
+ *               description: Nível de acesso do bibliotecário
+ *       example:
+ *         message: "Login realizado com sucesso!"
+ *         token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWJyYXJpYW5JZCI6IjEyMzQ1Njc4OTAiLCJlbWFpbCI6ImFkbWluQGJpYmxpb3RlY2Eub3JnIiwicm9sZSI6IkFkbWluIiwibmFtZSI6IkFkbWluaXN0cmFkb3IiLCJpYXQiOjE2MTY1MjM2MDAsImV4cCI6MTYxNjUyNzIwMH0.exampletoken"
+ *         librarian:
+ *           id: "1234567890"
+ *           name: "Administrador"
+ *           email: "admin@biblioteca.org"
+ *           role: "Admin"
  */

@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -15,7 +14,6 @@ import librarianRouter from './routes/librarian.routes';
 import path from 'path';
 
 const app = express();
-const prisma = new PrismaClient();
 
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
@@ -88,11 +86,12 @@ app.listen(PORT, () => {
     console.log(`📘 Documentação da API disponível em http://localhost:${PORT}/api-docs`);
 });
 
-const shutdownGracefully = async (signal: string) => {
-    console.log(`\nSinal ${signal} recebido. Desligando elegantemente...`);
-    await prisma.$disconnect();
-    console.log('Prisma Client desconectado.');
+// Lidando com sinais para encerramento elegante
+process.on('SIGINT', () => {
+    console.log('\nSinal SIGINT recebido. Desligando elegantemente...');
     process.exit(0);
-};
-process.on('SIGINT', () => shutdownGracefully('SIGINT'));
-process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
+});
+process.on('SIGTERM', () => {
+    console.log('\nSinal SIGTERM recebido. Desligando elegantemente...');
+    process.exit(0);
+});

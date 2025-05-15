@@ -11,10 +11,11 @@ import {
     deleteLibrarianByEmployeeId
 } from '../controllers/librarian.controller';
 import { authenticateToken, authorizeRoles, AuthenticatedRequest } from '../middlewares/auth.middleware';
-import { LibrarianRole, PrismaClient } from '@prisma/client';
+import { LibrarianRole } from '@prisma/client';
+// Importar o repository em vez de usar PrismaClient diretamente
+import librarianRepository from '../repositories/librarian.repository';
 
 const librarianRouter = Router();
-const prisma = new PrismaClient(); // Instância para checar se há bibliotecários
 
 /**
  * @swagger
@@ -26,7 +27,8 @@ const prisma = new PrismaClient(); // Instância para checar se há bibliotecár
 // Middleware para verificar se é a criação do primeiro admin
 const checkIfFirstAdmin = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const anyLibrarianExists = await prisma.librarian.findFirst();
+        // Usar o repository em vez do cliente Prisma diretamente
+        const anyLibrarianExists = await librarianRepository.exists();
 
         if (!anyLibrarianExists) {
             // Se NÃO existe nenhum bibliotecário, permite a criação sem token.
