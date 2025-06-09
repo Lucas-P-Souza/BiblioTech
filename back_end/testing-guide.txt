@@ -1,0 +1,268 @@
+============================================================
+GUIA DE TESTES DO BIBLIOTECH VIA SWAGGER UI
+============================================================
+
+Este guia fornece instruções passo a passo para testar as principais funcionalidades 
+da API BiblioTech usando a interface Swagger UI.
+
+CONFIGURAÇÃO INICIAL
+============================================================
+1. Certifique-se que o servidor está em execução:
+   - Execute `npm run dev` no terminal na pasta raiz do projeto
+   - Aguarde a mensagem "Servidor BiblioTech decolou na porta 3000"
+
+2. Acesse a interface Swagger:
+   - Abra seu navegador e acesse http://localhost:3000/api-docs
+   - A documentação interativa Swagger será carregada
+
+FLUXO DE TESTE COMPLETO
+============================================================
+
+PARTE 1: CRIAR O PRIMEIRO BIBLIOTECÁRIO (ADMIN)
+------------------------------------------------------------
+1. Expanda a seção "Bibliotecários" no Swagger UI
+2. Encontre o endpoint POST /librarians e clique para expandir
+3. Clique no botão "Try it out"
+4. Preencha o corpo da requisição com dados para o primeiro bibliotecário:
+   ```json
+   {
+     "name": "Admin Principal",
+     "email": "admin@bibliotech.com",
+     "employeeId": "EMP001",
+     "password": "senha123",
+     "role": "Admin"
+   }
+   ```
+5. Clique em "Execute"
+6. O sistema deve retornar status 201 (Created)
+7. Observe que o primeiro bibliotecário é automaticamente criado como Admin, 
+   independentemente do "role" fornecido
+
+PARTE 2: AUTENTICAÇÃO E OBTENÇÃO DO TOKEN
+------------------------------------------------------------
+1. Expanda a seção "Autenticação" no Swagger UI
+2. Encontre o endpoint POST /auth/login e clique para expandir
+3. Clique no botão "Try it out"
+4. Preencha as credenciais do administrador criado anteriormente:
+   ```json
+   {
+     "email": "admin@bibliotech.com",
+     "password": "senha123"
+   }
+   ```
+5. Clique em "Execute"
+6. O sistema deve retornar status 200 (OK) com um token JWT
+7. Copie o valor completo do token (sem as aspas)
+8. No topo da página do Swagger, clique no botão "Authorize"
+9. Cole o token no campo "Value" (com o prefixo Bearer):
+   ```
+   Bearer seu_token_aqui
+   ```
+10. Clique em "Authorize" e depois em "Close"
+11. Agora você está autenticado para acessar todas as rotas protegidas
+
+PARTE 3: GERENCIAMENTO DE CATEGORIAS
+------------------------------------------------------------
+1. Expanda a seção "Categorias" no Swagger UI
+
+2. CRIAR CATEGORIAS:
+   a) Encontre o endpoint POST /categories
+   b) Clique em "Try it out"
+   c) Adicione uma categoria:
+      ```json
+      {
+        "name": "Ficção Científica",
+        "description": "Livros baseados em avanços científicos e tecnológicos futurísticos"
+      }
+      ```
+   d) Clique em "Execute"
+   e) O sistema deve retornar status 201 (Created)
+   f) Repita para criar outras categorias como "Romance", "Biografia", etc.
+
+3. LISTAR CATEGORIAS:
+   a) Encontre o endpoint GET /categories
+   b) Clique em "Try it out"
+   c) Clique em "Execute" sem adicionar parâmetros para listar todas
+   d) O sistema deve retornar status 200 com a lista de categorias
+
+4. BUSCAR CATEGORIA POR NOME:
+   a) Encontre o endpoint GET /categories/by-name/{name}
+   b) Clique em "Try it out"
+   c) Digite o nome exato: "Ficção Científica"
+   d) Clique em "Execute"
+   e) O sistema deve retornar status 200 com os detalhes da categoria
+
+5. ATUALIZAR CATEGORIA:
+   a) Encontre o endpoint PUT /categories/by-name/{name}
+   b) Clique em "Try it out"
+   c) Digite o nome atual: "Ficção Científica"
+   d) No corpo da requisição, forneça os novos dados:
+      ```json
+      {
+        "description": "Livros de ficção baseados em conceitos científicos futuristas"
+      }
+      ```
+   e) Clique em "Execute"
+   f) O sistema deve retornar status 200 com os dados atualizados
+
+PARTE 4: GERENCIAMENTO DE EDITORAS
+------------------------------------------------------------
+1. Expanda a seção "Editoras" no Swagger UI
+
+2. CRIAR EDITORAS:
+   a) Encontre o endpoint POST /publishers
+   b) Clique em "Try it out"
+   c) Adicione uma editora:
+      ```json
+      {
+        "name": "Companhia das Letras",
+        "location": "São Paulo, SP",
+        "website": "https://www.companhiadasletras.com.br"
+      }
+      ```
+   d) Clique em "Execute"
+   e) O sistema deve retornar status 201 (Created)
+   f) Crie outra editora (ex: "Editora Intrínseca")
+
+3. LISTAR EDITORAS:
+   a) Encontre o endpoint GET /publishers
+   b) Clique em "Try it out" e "Execute"
+   c) Verifique se o sistema retorna a lista de editoras
+
+4. BUSCAR EDITORA POR NOME:
+   a) Encontre o endpoint GET /publishers/by-name/{name}
+   b) Digite o nome exato: "Companhia das Letras"
+   c) Execute e verifique os detalhes retornados
+
+PARTE 5: GERENCIAMENTO DE AUTORES
+------------------------------------------------------------
+1. Expanda a seção "Autores" no Swagger UI
+
+2. CRIAR AUTORES:
+   a) Encontre o endpoint POST /authors
+   b) Adicione um autor:
+      ```json
+      {
+        "name": "George Orwell",
+        "biography": "Autor britânico conhecido por obras como '1984' e 'A Revolução dos Bichos'"
+      }
+      ```
+   c) Execute e verifique o status 201
+   d) Crie mais alguns autores (ex: "J.K. Rowling", "Machado de Assis")
+
+3. LISTAR E BUSCAR AUTORES:
+   a) Teste o endpoint GET /authors para listar todos
+   b) Teste o endpoint GET /authors/by-name/{name} usando "George Orwell"
+
+PARTE 6: GERENCIAMENTO DE LIVROS
+------------------------------------------------------------
+1. Expanda a seção "Livros" no Swagger UI
+
+2. CRIAR LIVROS:
+   a) Encontre o endpoint POST /books
+   b) Crie um livro usando os nomes de entidades já criadas:
+      ```json
+      {
+        "title": "1984",
+        "isbn": "9780451524935",
+        "description": "Distopia que retrata um futuro totalitário",
+        "publishYear": 1949,
+        "coverImage": "https://example.com/covers/1984.jpg",
+        "publisherName": "Companhia das Letras",
+        "authorNames": ["George Orwell"],
+        "categoryNames": ["Ficção Científica"]
+      }
+      ```
+   c) Execute e verifique o status 201
+   d) Note que o sistema conecta automaticamente o livro às entidades existentes pelo nome
+
+3. LISTAR LIVROS:
+   a) Teste o endpoint GET /books para listar todos
+   b) Teste o endpoint GET /books/id/{id} usando o ID retornado na criação
+   c) Teste o endpoint GET /books/title/{title} com "1984"
+
+4. ATUALIZAR LIVRO:
+   a) Encontre o endpoint PUT /books/id/{id}
+   b) Use o ID de um livro existente
+   c) Atualize alguma informação:
+      ```json
+      {
+        "description": "Clássico da distopia que retrata um futuro totalitário onde o governo monitora cada aspecto da vida"
+      }
+      ```
+   d) Execute e verifique as alterações
+
+PARTE 7: GERENCIAMENTO DE BIBLIOTECÁRIOS (COM ADMIN)
+------------------------------------------------------------
+1. CRIAR OUTRO BIBLIOTECÁRIO:
+   a) Encontre o endpoint POST /librarians
+   b) Crie um bibliotecário com role Staff:
+      ```json
+      {
+        "name": "João Silva",
+        "email": "joao@bibliotech.com",
+        "employeeId": "EMP002",
+        "password": "senha456",
+        "role": "Staff"
+      }
+      ```
+   c) Execute e verifique o status 201
+   d) Crie outro com role Manager
+
+2. LISTAR E BUSCAR BIBLIOTECÁRIOS:
+   a) Teste o endpoint GET /librarians para listar todos
+   b) Teste o endpoint GET /librarians/employee/{employeeId} com "EMP002"
+
+3. ATUALIZAR UM BIBLIOTECÁRIO:
+   a) Encontre o endpoint PUT /librarians/employee/{employeeId}
+   b) Use "EMP002" como identificador
+   c) Atualize o nome:
+      ```json
+      {
+        "name": "João Carlos Silva"
+      }
+      ```
+   d) Execute e verifique as alterações
+
+TESTE DE PERMISSÕES E LIMITAÇÕES
+------------------------------------------------------------
+1. Faça logout clicando no botão "Authorize" e depois em "Logout"
+2. Faça login com as credenciais de um bibliotecário Staff:
+   ```json
+   {
+     "email": "joao@bibliotech.com",
+     "password": "senha456"
+   }
+   ```
+3. Autorize o Swagger com o novo token
+4. Tente criar outro bibliotecário - deve receber 403 Forbidden
+5. Tente criar um livro - deve funcionar normalmente
+6. Tente uma operação de exclusão em massa - deve receber 403 Forbidden
+
+TESTE DE OPERAÇÕES DE EXCLUSÃO
+------------------------------------------------------------
+1. Faça login novamente como Admin
+2. Teste operações de exclusão individual:
+   a) DELETE /authors/id/{id} usando um ID existente
+   b) DELETE /books/isbn/{isbn} usando "9780451524935"
+   c) DELETE /categories/by-name/{name} usando "Romance"
+
+3. IMPORTANTE: As operações de exclusão em massa são perigosas e não devem ser 
+   testadas em ambiente de produção:
+   - DELETE /authors
+   - DELETE /books
+   - DELETE /categories
+   - DELETE /publishers
+   - DELETE /librarians
+
+CONCLUSÃO
+============================================================
+Este guia cobriu o fluxo básico de testes da API BiblioTech usando o Swagger UI.
+Você pode explorar outros endpoints e combinações para testar funcionalidades 
+específicas e validar as regras de negócio do sistema.
+
+LEMBRE-SE:
+1. O Swagger UI mantém o token apenas durante a sessão atual do navegador
+2. Para testar níveis de permissão diferentes, faça logout e login como outro usuário
+3. Anote os IDs e identificadores dos recursos criados para uso posterior
+4. Se encontrar erros inesperados, verifique o console do servidor para mensagens detalhadas

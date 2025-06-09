@@ -1,0 +1,142 @@
+### Variáveis (Opcional)
+# @admin_token = SEU_TOKEN_DE_ADMIN_OU_MANAGER_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_OU_ADMIN_AQUI
+# @publisher_id_para_teste =
+# @publisher_nome_para_teste = "Editora Teste Único"
+
+### ======================================================================
+### PUBLISHER API TESTS
+### ======================================================================
+
+### PASSO 1: Limpar todas as editoras (REQUER TOKEN de Admin/Manager)
+DELETE http://localhost:3000/publishers
+Authorization: Bearer {{admin_token}} 
+
+
+### ---
+### PASSO 2: Listar todas as editoras (PÚBLICO - deve estar vazio)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 3: CRIAR EDITORAS (REQUER TOKEN)
+### ======================================================================
+
+### Criar Editora 1: "Companhia das Letras" (REQUER TOKEN)
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Companhia das Letras",
+  "address": "Rua Bandeira Paulista, 702, São Paulo",
+  "contactInfo": "contato@companhiadasletras.com.br"
+}
+### Anote o ID de "Companhia das Letras" da resposta para usar no PASSO 5 e 7
+
+### ---
+### Criar Editora 2: "{{@publisher_nome_para_teste}}" (REQUER TOKEN)
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "{{@publisher_nome_para_teste}}",
+  "address": "Endereço Teste, 123"
+}
+
+
+### ======================================================================
+### PASSO 4: LISTAR E BUSCAR EDITORAS (PÚBLICO)
+### ======================================================================
+
+### Listar todas as editoras (deve ter 2 agora)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+### ---
+### Listar editoras filtrando por nome "Companhia" (PÚBLICO)
+GET http://localhost:3000/publishers?name=Companhia
+Accept: application/json
+
+### ---
+### Buscar "{{@publisher_nome_para_teste}}" PELO NOME (PÚBLICO)
+GET http://localhost:3000/publishers/by-name/{{@publisher_nome_para_teste}}
+Accept: application/json
+
+### ---
+### Buscar "Companhia das Letras" pelo ID (PÚBLICO)
+# SUBSTITUA "COLOQUE_O_ID_DA_COMPANHIA_AQUI" pelo ID real
+GET http://localhost:3000/publishers/id/COLOQUE_O_ID_DA_COMPANHIA_AQUI
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 5: ATUALIZAR EDITORAS (REQUER TOKEN)
+### ======================================================================
+
+### Atualizar "Companhia das Letras" PELO ID (REQUER TOKEN)
+# SUBSTITUA "COLOQUE_O_ID_DA_COMPANHIA_AQUI" pelo ID real
+PUT http://localhost:3000/publishers/id/COLOQUE_O_ID_DA_COMPANHIA_AQUI
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Grupo Companhia das Letras",
+  "contactInfo": "novo_contato@companhiadasletras.com.br"
+}
+
+### ---
+### Verificar atualização da Companhia (PÚBLICO - buscando pelo ID)
+GET http://localhost:3000/publishers/id/COLOQUE_O_ID_DA_COMPANHIA_AQUI
+Accept: application/json
+
+### ---
+### Atualizar "{{@publisher_nome_para_teste}}" PELO NOME para "Editora Teste Modificada" (REQUER TOKEN)
+PUT http://localhost:3000/publishers/by-name/{{@publisher_nome_para_teste}}
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Editora Teste Modificada",
+  "address": "Endereço Modificado, 456"
+}
+
+### ---
+### Verificar atualização (PÚBLICO - buscando pelo novo nome)
+GET http://localhost:3000/publishers/by-name/Editora Teste Modificada
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 6: DELETAR EDITORAS (REQUER TOKEN)
+### ======================================================================
+
+### Deletar "Grupo Companhia das Letras" PELO NOME (REQUER TOKEN)
+DELETE http://localhost:3000/publishers/by-name/Grupo Companhia das Letras
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Deletar "Editora Teste Modificada" PELO ID (REQUER TOKEN)
+# SUBSTITUA "COLOQUE_O_ID_DA_EDITORA_TESTE_AQUI" pelo ID real dela (pode pegar do GET /publishers)
+DELETE http://localhost:3000/publishers/id/COLOQUE_O_ID_DA_EDITORA_TESTE_AQUI
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Listar todas as editoras (PÚBLICO - deve estar vazio se deletou as duas)
+GET http://localhost:3000/publishers
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 7: DELETAR TODAS AS EDITORAS (REQUER TOKEN de Admin/Manager)
+### ======================================================================
+DELETE http://localhost:3000/publishers
+Authorization: Bearer {{admin_token}} 
+
+### ---
+### Listar todas as editoras (PÚBLICO - deve estar vazio novamente)
+GET http://localhost:3000/publishers
+Accept: application/json
+

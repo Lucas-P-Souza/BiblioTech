@@ -1,0 +1,116 @@
+### Variáveis (Opcional)
+# @admin_token = SEU_TOKEN_DE_ADMIN_OU_MANAGER_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_OU_ADMIN_AQUI
+# @categoria_nome_teste = "Suspense Psicológico"
+
+### ======================================================================
+### CATEGORY API TESTS - FOCO EM OPERAÇÕES POR NOME
+### ======================================================================
+
+### PASSO 1: Limpar todas as categorias (REQUER TOKEN de Admin/Manager)
+DELETE http://localhost:3000/categories
+Authorization: Bearer {{admin_token}} 
+
+
+### ---
+### PASSO 2: Listar todas as categorias (PÚBLICO - deve estar vazio)
+GET http://localhost:3000/categories
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 3: CRIAR CATEGORIAS (REQUER TOKEN)
+### ======================================================================
+
+### Criar Categoria 1: "Ficção Científica" (REQUER TOKEN)
+POST http://localhost:3000/categories
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Ficção Científica",
+  "description": "Explora conceitos imaginativos baseados na ciência."
+}
+
+### ---
+### Criar Categoria 2: "{{@categoria_nome_teste}}" (REQUER TOKEN)
+POST http://localhost:3000/categories
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "{{@categoria_nome_teste}}",
+  "description": "Tramas que mexem com a mente."
+}
+
+
+### ======================================================================
+### PASSO 4: LISTAR E BUSCAR CATEGORIAS (PÚBLICO)
+### ======================================================================
+
+### Listar todas as categorias (deve ter 2 agora)
+GET http://localhost:3000/categories
+Accept: application/json
+
+### ---
+### Listar categorias filtrando por nome "Ficção" (PÚBLICO)
+GET http://localhost:3000/categories?name=Ficção
+Accept: application/json
+
+### ---
+### Buscar "{{@categoria_nome_teste}}" PELO NOME (PÚBLICO)
+# Se o nome tiver espaços, o REST Client faz o URL encoding (ex: Suspense%20Psicológico)
+GET http://localhost:3000/categories/by-name/{{@categoria_nome_teste}}
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 5: ATUALIZAR CATEGORIA PELO NOME (REQUER TOKEN)
+### ======================================================================
+
+### Atualizar "{{@categoria_nome_teste}}" PELO NOME para "Thriller Psicológico" (REQUER TOKEN)
+PUT http://localhost:3000/categories/by-name/{{@categoria_nome_teste}}
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "name": "Thriller Psicológico",
+  "description": "Suspense intenso com foco na psicologia dos personagens."
+}
+
+### ---
+### Verificar atualização (PÚBLICO - buscando pelo novo nome "Thriller Psicológico")
+GET http://localhost:3000/categories/by-name/Thriller Psicológico
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 6: DELETAR CATEGORIA PELO NOME (REQUER TOKEN)
+### ======================================================================
+
+### Deletar "Ficção Científica" PELO NOME (REQUER TOKEN)
+DELETE http://localhost:3000/categories/by-name/Ficção Científica
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Verificar se "Ficção Científica" foi deletada (PÚBLICO - buscando pelo nome)
+GET http://localhost:3000/categories/by-name/Ficção Científica
+Accept: application/json
+# Deve retornar 404 Not Found
+
+### ---
+### Listar todas as categorias (deve ter só "Thriller Psicológico" agora)
+GET http://localhost:3000/categories
+Accept: application/json
+
+
+### ======================================================================
+### PASSO 7: DELETAR TODAS AS CATEGORIAS (REQUER TOKEN de Admin/Manager)
+### ======================================================================
+DELETE http://localhost:3000/categories
+Authorization: Bearer {{admin_token}} 
+
+### ---
+### Listar todas as categorias (PÚBLICO - deve estar vazio novamente)
+GET http://localhost:3000/categories
+Accept: application/json

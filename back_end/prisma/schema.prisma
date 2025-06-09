@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg" // Caminho relativo para salvar o SVG
+  theme    = "forest"     // Tema opcional: forest, dark, neutral, default
+  includeRelationFromFields = true
+}
+
+// --- Enums ---
+enum BookItemStatus {
+  Available
+  Borrowed
+  Damaged
+  Lost
+  Reserved
+}
+
+enum LoanStatus {
+  Active
+  Returned
+  Overdue
+}
+
+enum FineStatus {
+  Pending
+  Paid
+  Waived
+}
+
+enum ReservationStatus {
+  Pending
+  Available
+  Fulfilled
+  Cancelled
+  Expired
+}
+
+enum LibrarianRole {
+  Admin
+  Staff
+  Manager
+}
+
+// --- Models ---
+
+// Usuário da biblioteca (membro)
+model User {
+  id               String        @id @default(uuid())
+  name             String        @unique
+  email            String        @unique // Email deve ser único para usuários
+  registrationDate DateTime      @default(now())
+  
+  loans            Loan[]
+  reservations     Reservation[]
+  fines            Fine[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+// Autor do livro
+model Author {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  biography String?
+  
+  books     Book[] // Relação muitos-para-muitos com Book
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Categoria/Gênero do Livro
+model Category {
+  id          String  @id @default(uuid())
+  name        String  @unique // Nome da categoria deve ser único
+  description String?
+  
+  books       Book[] // Relação muitos-para-muitos com Book
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Editora do Livro
+model Publisher {
+  id          String  @id @default(uuid())
+  name        String  @unique // Nome da editora deve ser único
+  address     String?
+  contactInfo String?
+  
+  books       Book[] // Uma editora pode publicar vários livros
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Livro (obra intelectual/título)
+model Book {
+  id              String   @id @default(uuid())
+  title           String
+  isbn            String   @unique // ISBN geralmente é único
+  publicationYear Int
+
+  authors         Author[]    // Relação muitos-para-muitos com Author
+  categories      Category[]  // Relação muitos-para-muitos com Category
+  
+  publisherId     String?
+  publisher       Publisher?  @relation(fields: [publisherId], references: [id]) // Um livro pertence a uma editora
+
+  items           BookItem[]    // Um título de livro tem vários exemplares físicos
+  reservations    Reservation[] // Um título de livro pode ter várias reservas
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+// Exemplar físico de um livro
+model BookItem {
+  id              String         @id @default(uuid())
+  barcode         String         @unique // Código de barras único do exemplar
+  status          BookItemStatus @default(Available)
+  acquisitionDate DateTime       @default(now())
+
+  bookId          String
+  book            Book           @relation(fields: [bookId], references: [id]) // Um exemplar pertence a um título de livro
+
+  loan            Loan?          // Um exemplar pode estar em um empréstimo ativo
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// Empréstimo de um exemplar
+model Loan {
+  id           String     @id @default(uuid())
+  loanDate     DateTime   @default(now())
+  dueDate      DateTime
+  returnDate   DateTime?
+  status       LoanStatus @default(Active)
+
+  bookItemId   String     @unique // Um exemplar só pode estar em um empréstimo ativo por vez
+  bookItem     BookItem   @relation(fields: [bookItemId], references: [id])
+
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+
+  fine         Fine?      // Um empréstimo pode ter uma multa associada
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// Multa
+model Fine {
+  id          String     @id @default(uuid())
+  amount      Float      // Usar Float para valores monetários
+  issueDate   DateTime   @default(now())
+  paymentDate DateTime?
+  status      FineStatus @default(Pending)
+
+  loanId      String     @unique // Uma multa é gerada por um empréstimo específico
+  loan        Loan       @relation(fields: [loanId], references: [id])
+
+  userId      String     // Para facilitar a busca de multas por usuário
+  user        User       @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Reserva de um título de livro
+model Reservation {
+  id                String            @id @default(uuid())
+  reservationDate   DateTime          @default(now())
+  status            ReservationStatus @default(Pending)
+  notificationSent  Boolean?          @default(false)
+  availableUntil    DateTime?         // Data limite para retirada após disponibilidade
+
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+
+  bookId            String
+  book              Book              @relation(fields: [bookId], references: [id])
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([userId, bookId, status]) // Evitar reservas duplicadas ativas para o mesmo livro/usuário
+}
+
+// Bibliotecário/Funcionário
+model Librarian {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  email        String        @unique // Email deve ser único para login
+  employeeId   String        @unique // ID funcional deve ser único
+  role         LibrarianRole @default(Staff)
+  passwordHash String        // Armazenar o hash da senha
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}

@@ -1,0 +1,152 @@
+### Variáveis (Exemplos)
+# @admin_token = SEU_TOKEN_DE_ADMIN_AQUI
+# @staff_token = SEU_TOKEN_DE_STAFF_AQUI
+# @book_id_criado =
+# @book_title_teste1 = "O Hobbit" 
+# @book_isbn_teste1 = "978-0547928227"
+# @book_title_teste2 = "O Silmarillion"
+# @book_isbn_teste2 = "978-0618391110"
+
+### ======================================================================
+### PREPARAÇÃO: Criar Autores, Categorias, Editoras (se não existirem)
+### ======================================================================
+POST http://localhost:3000/authors
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "J.R.R. Tolkien" }
+### ---
+POST http://localhost:3000/categories
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "Alta Fantasia" }
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "HarperCollins" }
+### ---
+POST http://localhost:3000/publishers
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{ "name": "Editora Martins Fontes" }
+
+
+### ======================================================================
+### BOOK API TESTS - FOCO EM ID/ISBN PARA MODIFICAÇÃO/DELEÇÃO
+### ======================================================================
+
+### Limpar todos os Livros (REQUER TOKEN ADMIN)
+DELETE http://localhost:3000/books
+Authorization: Bearer {{admin_token}}
+
+### ---
+### Criar Livro 1: "{{@book_title_teste1}}" (REQUER TOKEN)
+POST http://localhost:3000/books
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "title": "{{@book_title_teste1}}",
+  "isbn": "{{@book_isbn_teste1}}",
+  "publicationYear": 1937,
+  "publisherName": "HarperCollins", 
+  "authorNames": ["J.R.R. Tolkien"],
+  "categoryNames": ["Alta Fantasia"]
+}
+### Anote o ID do livro "{{@book_title_teste1}}" da resposta para testes por ID!
+
+### ---
+### Criar Livro 2: "{{@book_title_teste2}}" (REQUER TOKEN)
+POST http://localhost:3000/books
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "title": "{{@book_title_teste2}}",
+  "isbn": "{{@book_isbn_teste2}}",
+  "publicationYear": 1977,
+  "publisherName": "HarperCollins", 
+  "authorNames": ["J.R.R. Tolkien"],
+  "categoryNames": ["Alta Fantasia"]
+}
+
+### =============================================
+### LER LIVROS (PÚBLICO)
+### =============================================
+
+### Listar todos os Livros (deve ter 2)
+GET http://localhost:3000/books
+Accept: application/json
+
+### ---
+### Buscar livros PELO TÍTULO EXATO "{{@book_title_teste1}}" (retorna array)
+GET http://localhost:3000/books/title/{{@book_title_teste1}}
+Accept: application/json
+
+### ---
+### Buscar "{{@book_title_teste1}}" PELO ISBN (retorna objeto único)
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Accept: application/json
+
+
+### =============================================
+### ATUALIZAR LIVRO (PRIVADO - POR ID OU ISBN)
+### =============================================
+
+### Atualizar "{{@book_title_teste1}}" PELO ISBN ({{@book_isbn_teste1}})
+# Mudando o título e a editora
+PUT http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "title": "O Hobbit (Edição de Luxo)",
+  "publisherName": "Editora Martins Fontes" 
+}
+
+### ---
+### Verificar a atualização (buscando pelo ISBN {{@book_isbn_teste1}})
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Accept: application/json
+# Deve mostrar o título e editora atualizados.
+
+### ---
+### Atualizar "{{@book_title_teste2}}" PELO ID
+# COPIE O ID DO LIVRO "{{@book_title_teste2}}" (do GET /books ou da criação) E COLE AQUI
+PUT http://localhost:3000/books/id/COLOQUE_O_ID_DO_SILMARILLION_AQUI
+Content-Type: application/json
+Authorization: Bearer {{staff_token}}
+
+{
+  "publicationYear": 1978
+}
+
+
+### =============================================
+### DELETAR LIVRO (PRIVADO - POR ID OU ISBN)
+### =============================================
+
+### Deletar "O Hobbit (Edição de Luxo)" (pelo ISBN {{@book_isbn_teste1}})
+DELETE http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Tentar buscar "O Hobbit (Edição de Luxo)" pelo ISBN (deve dar 404)
+GET http://localhost:3000/books/isbn/{{@book_isbn_teste1}}
+Accept: application/json
+
+### ---
+### Deletar "{{@book_title_teste2}}" (agora com ano atualizado) PELO ID
+# COPIE O ID DO LIVRO "{{@book_title_teste2}}" E COLE AQUI
+DELETE http://localhost:3000/books/id/COLOQUE_O_ID_DO_SILMARILLION_AQUI
+Authorization: Bearer {{staff_token}}
+
+### ---
+### Listar todos os livros (deve estar vazio se deletou os dois)
+GET http://localhost:3000/books
+Accept: application/json
+
