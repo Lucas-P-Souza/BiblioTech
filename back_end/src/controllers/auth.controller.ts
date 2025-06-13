@@ -2,44 +2,9 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { convertTimeToSeconds } from '../utils/time.utils';
 
 const prisma = new PrismaClient();
-
-/**
- * Converte uma string de tempo para segundos
- * Aceita formatos como "1h", "7d", "30m", "3600s" ou número direto
- * @param timeStr String ou número representando o tempo
- * @return Número em segundos ou undefined se o formato for inválido
- */
-const convertTimeToSeconds = (timeStr: string | number | undefined): number | undefined => {
-    if (timeStr === undefined) return undefined;
-    if (typeof timeStr === 'number') return timeStr; // Já é um número (segundos)
-
-    if (typeof timeStr === 'string') {
-        const lastChar = timeStr.slice(-1).toLowerCase();
-        const amount = parseInt(timeStr.slice(0, -1), 10);
-
-        if (isNaN(amount)) return undefined; // Não conseguiu parsear o número
-
-        switch (lastChar) {
-            case 's': // segundos
-                return amount;
-            case 'm': // minutos
-                return amount * 60;
-            case 'h': // horas
-                return amount * 60 * 60;
-            case 'd': // dias
-                return amount * 60 * 60 * 24;
-            default:
-                // Se for um número puro como string (ex: "3600")
-                if (!isNaN(parseInt(timeStr, 10)) && String(parseInt(timeStr, 10)) === timeStr) {
-                    return parseInt(timeStr, 10);
-                }
-                return undefined; // Formato não reconhecido
-        }
-    }
-    return undefined;
-};
 
 // Realiza a autenticação do bibliotecário e gera token JWT
 // Verifica credenciais e retorna informações necessárias para a sessão
@@ -69,9 +34,7 @@ export const loginLibrarian = async (req: Request, res: Response): Promise<void>
         }
 
         const jwtSecret = process.env.JWT_SECRET;
-        // Pega do .env, ou usa "1h" como fallback
         const expiresInFromEnv = process.env.JWT_EXPIRES_IN || '1h';
-        // Converte para segundos
         const expiresInSeconds = convertTimeToSeconds(expiresInFromEnv);
 
         if (!jwtSecret) {
@@ -82,12 +45,6 @@ export const loginLibrarian = async (req: Request, res: Response): Promise<void>
 
         if (expiresInSeconds === undefined) {
             console.error(`ALERTA DE CONFIGURAÇÃO: Formato inválido para JWT_EXPIRES_IN: "${expiresInFromEnv}". Usando padrão de 1 hora (3600s).`);
-            // Se a conversão falhar, pode usar um padrão ou lançar erro. Aqui usamos 3600s.
-            // Ou poderia retornar um erro 500 para forçar a correção no .env
-            // res.status(500).json({ message: 'Erro de configuração interna do servidor (expiração JWT).' });
-            // return;
-            // Por segurança, se a conversão falhar, não gere o token ou use um default muito curto.
-            // Para este exemplo, vamos forçar um erro se não conseguir converter.
             res.status(500).json({ message: `Formato de JWT_EXPIRES_IN ("${expiresInFromEnv}") inválido. Use formatos como "3600" (segundos), "1h", "7d".` });
             return;
         }

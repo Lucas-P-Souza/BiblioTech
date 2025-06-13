@@ -10,7 +10,6 @@ import publisherRouter from './routes/publisher.routes';
 import bookRouter from './routes/book.routes';
 import librarianRouter from './routes/librarian.routes';
 
-// Import path module to help resolve file paths
 import path from 'path';
 
 const app = express();
@@ -18,7 +17,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
-// ---- Configuração do Swagger/OpenAPI ----
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
@@ -37,7 +35,6 @@ const swaggerOptions = {
                 description: 'Servidor de Desenvolvimento Local',
             },
         ],
-        // Remove the custom component schemas definition here, as they're defined in swagger.schemas.ts
         components: {
             securitySchemes: {
                 bearerAuth: {
@@ -48,8 +45,6 @@ const swaggerOptions = {
             }
         }
     },
-    // Include your model definitions file as the first API to load
-    // This ensures schemas are defined before routes that reference them
     apis: [
         path.resolve(__dirname, './models/swagger.schemas.ts'),
         path.resolve(__dirname, './routes/*.ts'),
@@ -86,7 +81,6 @@ app.listen(PORT, () => {
     console.log(`📘 Documentação da API disponível em http://localhost:${PORT}/api-docs`);
 });
 
-// Lidando com sinais para encerramento elegante
 process.on('SIGINT', () => {
     console.log('\nSinal SIGINT recebido. Desligando elegantemente...');
     process.exit(0);

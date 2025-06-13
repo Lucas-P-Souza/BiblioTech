@@ -1,5 +1,4 @@
 import { Router } from 'express';
-// Importa as funções do controller de livros
 import {
     createBook,
     getAllBooks,
@@ -12,9 +11,7 @@ import {
     deleteAllBooks
 } from '../controllers/book.controller';
 
-// Importa os middlewares de autenticação e autorização
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
-// Importa o enum LibrarianRole para usar na autorização por role
 import { LibrarianRole } from '@prisma/client';
 
 const bookRouter = Router();

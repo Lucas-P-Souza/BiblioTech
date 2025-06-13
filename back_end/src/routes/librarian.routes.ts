@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import {
     createLibrarian,
     getAllLibrarians,
@@ -10,10 +10,9 @@ import {
     updateLibrarianByEmployeeId,
     deleteLibrarianByEmployeeId
 } from '../controllers/librarian.controller';
-import { authenticateToken, authorizeRoles, AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
+import { checkIfFirstAdmin } from '../middlewares/librarian.middleware';
 import { LibrarianRole } from '@prisma/client';
-// Importar o repository em vez de usar PrismaClient diretamente
-import librarianRepository from '../repositories/librarian.repository';
 
 const librarianRouter = Router();
 
@@ -23,40 +22,6 @@ const librarianRouter = Router();
  * - name: Bibliotecários
  *   description: Operações para gerenciamento de bibliotecários.
  */
-
-// Middleware para verificar se é a criação do primeiro admin
-const checkIfFirstAdmin = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        // Usar o repository em vez do cliente Prisma diretamente
-        const anyLibrarianExists = await librarianRepository.exists();
-
-        if (!anyLibrarianExists) {
-            // Se NÃO existe nenhum bibliotecário, permite a criação sem token.
-            // O controller createLibrarian forçará o role Admin para este primeiro.
-            console.log('Middleware checkIfFirstAdmin: Nenhum bibliotecário existe, permitindo criação do primeiro.');
-            next(); // Pula para o controller createLibrarian
-            return;
-        } else {
-            // Se JÁ existem bibliotecários, aplica a autenticação e autorização normal de Admin.
-            console.log('Middleware checkIfFirstAdmin: Bibliotecários já existem, aplicando autenticação/autorização de Admin.');
-            // Encadear authenticateToken e depois authorizeRoles
-            authenticateToken(req, res, (authError?: any) => {
-                if (authError) {
-                    // Se authenticateToken enviar uma resposta de erro, ele não chamará next.
-                    // Se ele chamar next(authError), o erro será tratado pelo Express.
-                    // Se chegou aqui com authError, é porque next(authError) foi chamado.
-                    return next(authError);
-                }
-                // Se autenticado com sucesso, prossegue para authorizeRoles
-                authorizeRoles(LibrarianRole.Admin)(req, res, next);
-            });
-        }
-    } catch (error) {
-        console.error("Erro no middleware checkIfFirstAdmin:", error);
-        res.status(500).json({ message: "Erro interno no servidor ao verificar permissões." });
-        // Não chamamos next(error) aqui porque já enviamos uma resposta.
-    }
-};
 
 // All POST endpoints
 /**

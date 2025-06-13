@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import authorRepository from '../repositories/author.repository';
 
-// Retorna todos os autores cadastrados
-// Permite filtrar por nome via parâmetro de consulta
+// Recupera todos os autores com filtro opcional
 export const getAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query;
@@ -15,7 +14,7 @@ export const getAllAuthors = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Busca um autor específico pelo seu ID (UUID)
+// Busca um autor pelo ID
 export const getAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -32,8 +31,7 @@ export const getAuthorById = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Busca um autor pelo nome exato
-// Requer que o campo 'name' seja único na tabela de autores
+// Busca um autor pelo nome
 export const getAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const authorName = req.params.name;
     try {
@@ -50,7 +48,7 @@ export const getAuthorByName = async (req: Request, res: Response): Promise<void
     }
 };
 
-// Cria um novo autor no sistema
+// Cria um novo autor
 export const createAuthor = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, biography } = req.body;
@@ -72,7 +70,7 @@ export const createAuthor = async (req: Request, res: Response): Promise<void> =
     }
 };
 
-// Atualiza os dados de um autor pelo seu ID
+// Atualiza informações de um autor pelo ID
 export const updateAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name, biography } = req.body;
@@ -106,8 +104,7 @@ export const updateAuthorById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Atualiza os dados de um autor pelo seu nome
-// Requer que o campo 'name' seja único na tabela de autores
+// Atualiza informações de um autor pelo nome
 export const updateAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const currentName = req.params.name;
     const { name: newName, biography } = req.body;
@@ -140,8 +137,7 @@ export const updateAuthorByName = async (req: Request, res: Response): Promise<v
     }
 };
 
-// Remove um autor pelo seu nome
-// Requer que o campo 'name' seja único na tabela de autores
+// Remove um autor pelo nome
 export const deleteAuthorByName = async (req: Request, res: Response): Promise<void> => {
     const authorName = req.params.name;
     try {
@@ -163,7 +159,7 @@ export const deleteAuthorByName = async (req: Request, res: Response): Promise<v
     }
 };
 
-// Remove um autor pelo seu ID
+// Remove um autor pelo ID
 export const deleteAuthorById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -186,8 +182,6 @@ export const deleteAuthorById = async (req: Request, res: Response): Promise<voi
 };
 
 // Remove todos os autores do sistema
-// Observação: autores associados a livros podem não ser removidos,
-// dependendo da configuração de restrições do banco de dados
 export const deleteAllAuthors = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await authorRepository.deleteAll();

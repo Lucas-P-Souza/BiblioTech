@@ -6,9 +6,7 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
-// Cria um novo bibliotecário
-// O primeiro bibliotecário criado recebe automaticamente role Admin
-// Para os demais, só um Admin pode criar novos bibliotecários
+// Cria um novo bibliotecário no sistema
 export const createLibrarian = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const { name, email, employeeId, password, role } = req.body;
@@ -29,10 +27,7 @@ export const createLibrarian = async (req: AuthenticatedRequest, res: Response):
             finalRole = LibrarianRole.Admin;
             console.log('Primeiro bibliotecário sendo criado. Definindo role como Admin.');
         } else {
-            // Se já existem bibliotecários, a rota DEVE ser protegida para que apenas um Admin crie outros.
-            // A verificação de req.librarian.role === LibrarianRole.Admin é feita pelo middleware authorizeRoles na rota.
-            // Aqui, apenas validamos o 'role' fornecido para o novo bibliotecário.
-            let requestedRole: LibrarianRole = LibrarianRole.Staff; // Default se não especificado
+            let requestedRole: LibrarianRole = LibrarianRole.Staff;
             if (role) {
                 if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
                     requestedRole = role as LibrarianRole;
@@ -62,8 +57,7 @@ export const createLibrarian = async (req: AuthenticatedRequest, res: Response):
     }
 };
 
-// Lista todos os bibliotecários cadastrados
-// Acesso restrito a Admin e Manager
+// Recupera lista de todos os bibliotecários
 export const getAllLibrarians = async (req: Request, res: Response): Promise<void> => {
     try {
         const librarians = await prisma.librarian.findMany({
@@ -76,8 +70,7 @@ export const getAllLibrarians = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Busca um bibliotecário pelo ID (UUID)
-// Acesso restrito a Admin e Manager
+// Busca um bibliotecário pelo ID
 export const getLibrarianById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -96,8 +89,7 @@ export const getLibrarianById = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Busca um bibliotecário pelo número de identificação funcional
-// Acesso restrito a Admin e Manager
+// Busca um bibliotecário pelo número de identificação
 export const getLibrarianByEmployeeId = async (req: Request, res: Response): Promise<void> => {
     const { employeeId } = req.params;
     try {
@@ -117,10 +109,9 @@ export const getLibrarianByEmployeeId = async (req: Request, res: Response): Pro
 };
 
 // Atualiza os dados de um bibliotecário pelo seu ID
-// Acesso restrito a Admin
 export const updateLibrarianById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { id: targetLibrarianId } = req.params;
-    const { name, email, employeeId, password, role } = req.body; // 'role' é o novo role a ser definido
+    const { name, email, employeeId, password, role } = req.body;
 
     if (name === undefined && email === undefined && employeeId === undefined && password === undefined && role === undefined) {
         res.status(400).json({ message: 'Nenhum dado novo para atualizar.' });
@@ -133,12 +124,10 @@ export const updateLibrarianById = async (req: AuthenticatedRequest, res: Respon
         if (email !== undefined) dataToUpdate.email = email;
         if (employeeId !== undefined) dataToUpdate.employeeId = employeeId;
 
-        // Se um novo 'role' foi fornecido no corpo da requisição
         if (role !== undefined) {
             if (Object.values(LibrarianRole).includes(role as LibrarianRole)) {
                 dataToUpdate.role = role as LibrarianRole;
             } else {
-                // Se 'role' foi fornecido mas não é um valor válido do enum
                 res.status(400).json({ message: `Role inválido. Valores permitidos: ${Object.values(LibrarianRole).join(', ')}` });
                 return;
             }
@@ -166,10 +155,9 @@ export const updateLibrarianById = async (req: AuthenticatedRequest, res: Respon
 };
 
 // Atualiza os dados de um bibliotecário pelo seu número de identificação
-// Acesso restrito a Admin
 export const updateLibrarianByEmployeeId = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { employeeId: paramEmployeeId } = req.params;
-    const { name, email, employeeId: newEmployeeId, password, role } = req.body; // 'role' é o novo role
+    const { name, email, employeeId: newEmployeeId, password, role } = req.body;
 
     if (name === undefined && email === undefined && newEmployeeId === undefined && password === undefined && role === undefined) {
         res.status(400).json({ message: 'Nenhum dado para atualização.' }); return;
@@ -212,7 +200,6 @@ export const updateLibrarianByEmployeeId = async (req: AuthenticatedRequest, res
 };
 
 // Remove um bibliotecário pelo seu ID
-// Acesso restrito a Admin
 export const deleteLibrarianById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
@@ -228,7 +215,6 @@ export const deleteLibrarianById = async (req: Request, res: Response): Promise<
 };
 
 // Remove um bibliotecário pelo seu número de identificação
-// Acesso restrito a Admin
 export const deleteLibrarianByEmployeeId = async (req: Request, res: Response): Promise<void> => {
     const { employeeId } = req.params;
     try {
@@ -246,7 +232,6 @@ export const deleteLibrarianByEmployeeId = async (req: Request, res: Response): 
 };
 
 // Remove todos os bibliotecários do sistema
-// Operação extremamente perigosa - acesso restrito a Admin
 export const deleteAllLibrarians = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await prisma.librarian.deleteMany({});

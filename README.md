@@ -1,129 +1,72 @@
-# BiblioTech - Sistema de Gerenciamento de Biblioteca
+# BiblioTech
 
-## Sobre o Projeto
+Sistema de gerenciamento de biblioteca com API RESTful.
 
-BiblioTech é uma API RESTful desenvolvida como trabalho prático para a disciplina de Desenvolvimento de Projeto de Software (PBLC01) na UNIFEI. O sistema oferece uma solução completa para gerenciamento de bibliotecas, permitindo o controle de acervos, empréstimos, reservas e usuários de forma eficiente e integrada.
+## Requisitos
 
-A API foi construída seguindo princípios REST e boas práticas de desenvolvimento, utilizando Node.js com TypeScript para criar uma base de código robusta e tipada, e PostgreSQL como banco de dados relacional.
+- Node.js (v14+)
+- Docker (para PostgreSQL)
 
-## Funcionalidades
+## Instalação e Configuração
 
-### Gerenciamento de Acervo
+### Método 1: Configuração Completa (Recomendado para primeira execução)
 
-- **Livros**: Cadastro completo de livros com informações detalhadas, incluindo título, ISBN, ano de publicação e capa
-- **Autores**: Registro de autores com biografia e associação a múltiplas obras
-- **Categorias**: Organização de livros por categorias temáticas
-- **Editoras**: Cadastro de editoras com informações de contato
-
-### Gestão de Pessoas
-
-- **Bibliotecários**: Controle de acesso com diferentes níveis de permissão (Admin, Manager, Staff)
-- **Membros**: Cadastro de usuários da biblioteca (em desenvolvimento)
-
-### Operações de Biblioteca
-
-- **Empréstimos**: Registro e acompanhamento de empréstimos (em desenvolvimento)
-- **Reservas**: Sistema de reserva de livros (em desenvolvimento)
-- **Multas**: Controle de multas por atraso (em desenvolvimento)
-
-### Segurança e Acessos
-
-- **Autenticação**: Sistema JWT (JSON Web Tokens) para controle seguro de acesso
-- **Autorização**: Controle granular de permissões baseado em papéis (roles)
-
-## Tecnologias Utilizadas
-
-### Back-end
-
-- **Node.js** - Ambiente de execução JavaScript
-- **TypeScript** - Superset tipado do JavaScript
-- **Express** - Framework web para criação da API REST
-- **Prisma ORM** - ORM para interação com o banco de dados
-- **JWT** - Autenticação e autorização com tokens
-- **bcryptjs** - Hashing seguro de senhas
-- **PostgreSQL** - Banco de dados relacional
-- **Swagger/OpenAPI** - Documentação interativa da API
-
-### DevOps
-
-- **Docker** - Containerização do ambiente de desenvolvimento
-- **Git & GitHub** - Controle de versão e colaboração
-
-## Começando
-
-Estas instruções vão ajudar você a obter uma cópia do projeto funcionando na sua máquina local para desenvolvimento e testes.
-
-### Pré-requisitos
-
-- Node.js (v14 ou superior)
-- npm (v6 ou superior)
-- Docker e Docker Compose
-- Git
-
-### Instalação
-
-1. **Clone o repositório**
+Execute o script de configuração que instalará todas as dependências e configurará o banco de dados:
 
 ```bash
-git clone https://github.com/Lucas-P-Souza/BiblioTech.git
-cd BiblioTech
+cd back_end
+chmod +x setup.sh
+./setup.sh
 ```
 
-2. **Instale as dependências**
+Este script irá:
+1. Criar um arquivo `.env` a partir do modelo `.env.example` (se não existir)
+2. Instalar todas as dependências do projeto
+3. Gerar o cliente Prisma
+4. Verificar a conexão com o banco de dados PostgreSQL (via Docker)
+5. Aplicar as migrações do banco de dados
+6. Opcionalmente, popular o banco com dados iniciais
+
+### Método 2: Inicialização Rápida (Para uso subsequente)
+
+Se você já configurou o sistema anteriormente, pode usar o script de inicialização rápida:
 
 ```bash
-npm install
+cd back_end
+chmod +x start-bibliotech.sh
+./start-bibliotech.sh
 ```
 
-3. **Configure as variáveis de ambiente**
+Este script irá:
+1. Verificar se o sistema já está configurado
+2. Iniciar o container do PostgreSQL (se não estiver em execução)
+3. Iniciar o servidor de desenvolvimento
 
-Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+## Uso da API
 
-```
-DATABASE_URL="postgresql://adminbibliotech:SUA_SENHA_AQUI@localhost:5432/bibliotech_dev"
-JWT_SECRET="sua_chave_secreta_para_tokens_jwt"
-JWT_EXPIRES_IN="1d"
-```
+Após iniciar o servidor, acesse a documentação interativa da API em:
+http://localhost:3000/api-docs
 
-4. **Inicie o banco de dados PostgreSQL via Docker**
+### Guia Rápido de Teste
 
-```bash
-docker run --name bibliotech-db -e POSTGRES_USER=adminbibliotech -e POSTGRES_PASSWORD=SUA_SENHA_AQUI -e POSTGRES_DB=bibliotech_dev -p 5432:5432 -d postgres
-```
+1. Primeiro, crie um bibliotecário administrador (o primeiro usuário criado será sempre Admin)
+2. Faça login para obter um token JWT
+3. Use o token para autenticar as chamadas subsequentes
+4. Explore as operações disponíveis na documentação Swagger
 
-5. **Execute as migrações do banco de dados**
+Para instruções detalhadas de teste, consulte o arquivo `back_end/testing-guide.txt`.
 
-```bash
-npx prisma migrate dev
-```
+## Desenvolvimento
 
-6. **Gere o Prisma Client**
+### Scripts Disponíveis
 
-```bash
-npx prisma generate
-```
-
-7. **Inicie a aplicação em modo de desenvolvimento**
-
-```bash
-npm run dev
-```
-
-A API estará disponível em `http://localhost:3000` e a documentação Swagger em `http://localhost:3000/api-docs`.
-
-## Diagrama de Entidade-Relacionamento (ERD)
-
-O projeto inclui um diagrama ERD gerado automaticamente a partir do schema do Prisma. O diagrama ajuda a visualizar a estrutura do banco de dados e as relações entre as entidades.
-
-Para gerar ou atualizar o diagrama ERD:
-
-```bash
-npx prisma generate
-```
-
-O diagrama será salvo como `ERD.svg` na raiz do projeto. Você pode visualizá-lo diretamente no navegador ou com qualquer visualizador de SVG.
-
-![BiblioTech ERD](./ERD.svg)
+- `npm run dev` - Inicia o servidor de desenvolvimento com auto-reload
+- `npm run build` - Compila o código TypeScript
+- `npm run start` - Inicia o servidor em modo de produção
+- `npm run db:migrate` - Aplica as migrações do banco de dados
+- `npm run db:seed` - Popula o banco de dados com dados iniciais
+- `npm run db:reset` - Reseta o banco de dados (cuidado, apaga todos os dados)
+- `npm run db:studio` - Abre o Prisma Studio para visualização do banco de dados
 
 ## Estrutura do Projeto
 

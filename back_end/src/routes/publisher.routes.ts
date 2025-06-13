@@ -1,5 +1,4 @@
 import { Router } from 'express';
-// Importa todas as funções do controller de editoras
 import {
     getAllPublishers,
     getPublisherByName,
@@ -12,9 +11,7 @@ import {
     deleteAllPublishers
 } from '../controllers/publisher.controller';
 
-// Importa os middlewares de autenticação e autorização
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
-// Importa o enum LibrarianRole para usar na autorização por role
 import { LibrarianRole } from '@prisma/client';
 
 const publisherRouter = Router();

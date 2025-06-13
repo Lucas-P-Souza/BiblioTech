@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
 import categoryRepository from '../repositories/category.repository';
 
-// Retorna todas as categorias cadastradas
-// Permite filtrar por nome via query parameter (busca parcial, case-insensitive)
-// Rota pública
+// Lista todas as categorias com filtro opcional
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name } = req.query;
@@ -17,9 +15,7 @@ export const getAllCategories = async (req: Request, res: Response): Promise<voi
     }
 };
 
-// Busca uma categoria pelo seu nome exato
-// Requer que o campo 'name' seja único na tabela de categorias
-// Rota pública
+// Busca uma categoria pelo nome
 export const getCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const categoryName = req.params.name;
     try {
@@ -36,8 +32,7 @@ export const getCategoryByName = async (req: Request, res: Response): Promise<vo
     }
 };
 
-// Cria uma nova categoria no sistema
-// Requer autenticação (JWT)
+// Cria uma nova categoria
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
     try {
         const { name, description } = req.body;
@@ -59,8 +54,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// Atualiza os dados de uma categoria pelo seu nome
-// Requer autenticação (JWT) e que o campo 'name' seja único
+// Atualiza uma categoria pelo nome
 export const updateCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const currentName = req.params.name;
     const { name: newName, description } = req.body;
@@ -97,8 +91,7 @@ export const updateCategoryByName = async (req: Request, res: Response): Promise
     }
 };
 
-// Remove uma categoria pelo seu nome
-// Requer autenticação (JWT) e que o campo 'name' seja único
+// Remove uma categoria pelo nome
 export const deleteCategoryByName = async (req: Request, res: Response): Promise<void> => {
     const categoryName = req.params.name;
     try {
@@ -122,9 +115,6 @@ export const deleteCategoryByName = async (req: Request, res: Response): Promise
 };
 
 // Remove todas as categorias do sistema
-// Operação perigosa - deve ser restrita por role
-// Categorias associadas a livros podem não ser removidas,
-// dependendo das restrições configuradas no banco de dados
 export const deleteAllCategories = async (req: Request, res: Response): Promise<void> => {
     try {
         const deleteResult = await categoryRepository.deleteAll();

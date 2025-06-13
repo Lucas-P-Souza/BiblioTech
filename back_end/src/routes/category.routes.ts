@@ -1,17 +1,14 @@
 import { Router } from 'express';
-// Importa as funções do controller de categorias, focando nas operações por nome
 import {
     getAllCategories,
-    getCategoryByName,  // Para buscar uma categoria específica pelo nome
+    getCategoryByName,
     createCategory,
-    updateCategoryByName, // Para atualizar uma categoria pelo nome
-    deleteCategoryByName, // Para deletar uma categoria pelo nome
+    updateCategoryByName,
+    deleteCategoryByName,
     deleteAllCategories
 } from '../controllers/category.controller';
 
-// Importa os middlewares de autenticação e autorização
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
-// Importa o enum LibrarianRole para usar na autorização por role
 import { LibrarianRole } from '@prisma/client';
 
 const categoryRouter = Router();
